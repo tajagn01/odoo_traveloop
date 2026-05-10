@@ -24,16 +24,12 @@ export default async function BuilderPage({
         orderBy: { stopOrder: "asc" },
         include: {
           activities: {
-            orderBy: [
-              { scheduledDay: "asc" },
-              { scheduledTime: "asc" },
-              { createdAt: "asc" },
-            ],
+            orderBy: { createdAt: "asc" },
           },
         },
       },
       transportSegments: {
-        orderBy: { departureTime: "asc" },
+        orderBy: { createdAt: "asc" },
       },
     },
   });

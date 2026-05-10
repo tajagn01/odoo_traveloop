@@ -11,19 +11,25 @@ export default async function CommunityPage() {
   const session = await requireAuth();
 
   // Fetch some featured/recent posts
-  const posts = await prisma.communityPost.findMany({
-    take: 6,
-    orderBy: { likes: { _count: "desc" } },
-    include: {
-      author: true,
-      trip: {
-        include: { stops: true },
+  let posts = [];
+  try {
+    posts = await prisma.communityPost.findMany({
+      take: 6,
+      orderBy: { likes: { _count: "desc" } },
+      include: {
+        author: true,
+        trip: {
+          include: { stops: true },
+        },
+        _count: {
+          select: { likes: true, bookmarks: true },
+        },
       },
-      _count: {
-        select: { likes: true, bookmarks: true },
-      },
-    },
-  });
+    });
+  } catch (error) {
+    console.error("Error fetching community posts:", error);
+    // Return empty array if database query fails
+  }
 
   // Calculate duration and destinations for the UI
   const formattedPosts = posts.map(post => {

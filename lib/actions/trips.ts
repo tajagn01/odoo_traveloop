@@ -14,6 +14,7 @@ const tripSchema = z.object({
   description: z.string().optional(),
   startDate: z.string(),
   endDate: z.string(),
+  status: z.enum(["upcoming", "ongoing", "completed"]).optional(),
 });
 
 export async function createTripAction(formData: FormData) {
@@ -24,6 +25,7 @@ export async function createTripAction(formData: FormData) {
     description: formData.get("description"),
     startDate: formData.get("startDate"),
     endDate: formData.get("endDate"),
+    status: formData.get("status"),
   });
 
   if (!payload.success) {
@@ -37,10 +39,18 @@ export async function createTripAction(formData: FormData) {
       coverPhoto = await uploadImage(coverFile);
     } catch (err) {
       console.error("Cover photo upload failed, skipping:", err);
-      // Trip will be created without a cover photo
     }
   }
 
+  // Parse stops, expenses, and budget
+  const stopsData = formData.get("stops");
+  const expensesData = formData.get("expenses");
+  const budgetLimit = formData.get("budgetLimit");
+  
+  const stops = stopsData ? JSON.parse(stopsData as string) : [];
+  const expenses = expensesData ? JSON.parse(expensesData as string) : [];
+
+  // Create trip with stops, activities, and expenses
   const trip = await prisma.trip.create({
     data: {
       userId: session.user.id,
@@ -48,12 +58,69 @@ export async function createTripAction(formData: FormData) {
       description: payload.data.description ?? null,
       startDate: new Date(payload.data.startDate),
       endDate: new Date(payload.data.endDate),
+      status: payload.data.status ?? "upcoming",
+      budgetLimit: budgetLimit ? parseFloat(budgetLimit as string) : null,
       coverPhoto,
       shareToken: crypto.randomUUID(),
+      // Create stops with activities
+      stops: stops.length > 0 ? {
+        create: await Promise.all(stops.map(async (stop: any, index: number) => {
+          // Find or create city
+          let city = await prisma.city.findUnique({
+            where: { name_country: { name: stop.cityName, country: stop.country } }
+          });
+
+          if (!city) {
+            city = await prisma.city.create({
+              data: {
+                name: stop.cityName,
+                country: stop.country,
+                region: "Unknown",
+                popularityScore: 50,
+                costIndex: 50,
+              }
+            });
+          }
+
+          return {
+            cityId: city.id,
+            cityName: stop.cityName,
+            country: stop.country,
+            arrivalDate: new Date(stop.arrivalDate),
+            departureDate: new Date(stop.departureDate),
+            stopOrder: index + 1,
+            hotelName: stop.hotelName || null,
+            stayCost: stop.hotelCost || null,
+            transportCost: stop.transportCost || null,
+            activities: stop.activities && stop.activities.length > 0 ? {
+              create: stop.activities.map((activity: any, actIndex: number) => ({
+                cityId: city.id,
+                activityName: activity.name,
+                description: activity.description || null,
+                activityType: "general",
+                duration: 60,
+                cost: activity.cost || 0,
+                scheduledDay: actIndex + 1,
+                scheduledTime: activity.time || null,
+              }))
+            } : undefined,
+          };
+        }))
+      } : undefined,
+      // Create expenses
+      expenses: expenses.length > 0 ? {
+        create: expenses.map((expense: any) => ({
+          category: expense.category,
+          amount: expense.amount,
+          date: expense.date ? new Date(expense.date) : new Date(payload.data.startDate),
+          note: expense.description,
+        }))
+      } : undefined,
     },
   });
 
   revalidatePath("/trips");
+  revalidatePath("/itinerary");
   redirect(`/trips/${trip.id}/builder`);
 }
 
@@ -107,4 +174,45 @@ export async function updateTripAction(formData: FormData) {
   revalidatePath(`/trips/${trip.id}`);
   revalidatePath("/trips");
   redirect(`/trips/${trip.id}`);
+}
+
+
+export async function deleteTripAction(tripId: string) {
+  const session = await requireAuth();
+
+  const trip = await prisma.trip.findFirst({
+    where: { id: tripId, userId: session.user.id },
+  });
+
+  if (!trip) {
+    throw new Error("Trip not found or unauthorized.");
+  }
+
+  await prisma.trip.delete({
+    where: { id: tripId },
+  });
+
+  revalidatePath("/trips");
+  revalidatePath("/itinerary");
+  revalidatePath("/dashboard");
+}
+
+export async function deleteStopAction(stopId: string) {
+  const session = await requireAuth();
+
+  const stop = await prisma.stop.findFirst({
+    where: { id: stopId },
+    include: { trip: true },
+  });
+
+  if (!stop || stop.trip.userId !== session.user.id) {
+    throw new Error("Stop not found or unauthorized.");
+  }
+
+  await prisma.stop.delete({
+    where: { id: stopId },
+  });
+
+  revalidatePath(`/trips/${stop.tripId}`);
+  revalidatePath("/itinerary");
 }
