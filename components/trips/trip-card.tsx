@@ -47,7 +47,7 @@ const statusConfig = {
 export function TripCard({ trip }: { trip: TripCardData }) {
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
-  const config = statusConfig[trip.status];
+  const config = statusConfig[trip.status] || statusConfig.upcoming;
   const StatusIcon = config.icon;
 
   const onDelete = async () => {
@@ -59,6 +59,32 @@ export function TripCard({ trip }: { trip: TripCardData }) {
     toast.success("Trip removed.");
     router.refresh();
   };
+
+  const updateStatus = async (newStatus: "upcoming" | "ongoing" | "completed") => {
+    if (newStatus === trip.status) return;
+    
+    setIsUpdating(true);
+    try {
+      const response = await fetch(`/api/trips/${trip.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        toast.error("Failed to update trip status");
+        return;
+      }
+
+      toast.success(`Trip marked as ${newStatus}`);
+      router.refresh();
+    } catch (error) {
+      toast.error("Error updating trip status");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const defaultImage = getPlaceImage(trip.tripName);
 
   return (
@@ -76,7 +102,13 @@ export function TripCard({ trip }: { trip: TripCardData }) {
         </div>
       </div>
       <CardHeader className="space-y-1.5 pb-3 flex-1">
-        <CardTitle className="text-lg font-semibold line-clamp-1">{trip.tripName}</CardTitle>
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="text-lg font-semibold line-clamp-1">{trip.tripName}</CardTitle>
+          <Badge variant={config.variant} className="flex items-center gap-1 text-xs whitespace-nowrap shrink-0">
+            <StatusIcon className={`h-3 w-3 ${config.color}`} />
+            {config.label}
+          </Badge>
+        </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground pb-1">
           <CalendarDays className="h-3.5 w-3.5" />
           {formatDateRange(trip.startDate, trip.endDate)}
@@ -99,6 +131,47 @@ export function TripCard({ trip }: { trip: TripCardData }) {
         <Button size="sm" variant="ghost" onClick={onDelete} className="px-3 text-red-500 hover:text-red-600 hover:bg-red-500/10">
           <Trash2 className="h-4 w-4" />
         </Button>
+      <CardContent className="space-y-3">
+        {/* Status Update Section */}
+        <div className="border-t pt-3">
+          <p className="text-xs font-semibold text-muted-foreground mb-2">Trip Status</p>
+          <div className="flex flex-wrap gap-2">
+            {(["upcoming", "ongoing", "completed"] as const).map((status) => {
+              const isCurrentStatus = trip.status === status;
+              const statusConf = statusConfig[status];
+              const StatusIconComponent = statusConf.icon;
+              return (
+                <Button
+                  key={status}
+                  size="sm"
+                  variant={isCurrentStatus ? "default" : "outline"}
+                  onClick={() => updateStatus(status)}
+                  disabled={isUpdating}
+                  className={`capitalize ${isCurrentStatus ? "shadow-md" : ""}`}
+                >
+                  <StatusIconComponent className="h-3 w-3 mr-1" />
+                  {status}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+        {/* Action buttons */}
+        <div className="flex flex-wrap gap-2">
+          <Button asChild size="sm">
+            <Link href={`/trips/${trip.id}`}>View</Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/trips/${trip.id}/builder`}>
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Link>
+          </Button>
+          <Button size="sm" variant="ghost" onClick={onDelete}>
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

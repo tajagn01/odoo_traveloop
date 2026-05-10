@@ -16,13 +16,14 @@ type TripListRow = {
   endDate: Date;
   status: "upcoming" | "ongoing" | "completed";
   stops: unknown[];
+  tripCopiesAsNew: Array<{ id: string }>;
 };
 
 export default async function TripsPage() {
   const session = await requireAuth();
   const trips = (await prisma.trip.findMany({
     where: { userId: session.user.id },
-    include: { stops: true },
+    include: { stops: true, tripCopiesAsNew: true },
     orderBy: { startDate: "asc" },
   })) as TripListRow[];
 
@@ -30,6 +31,16 @@ export default async function TripsPage() {
   const ongoing = trips.filter((t) => t.status === "ongoing");
   const upcoming = trips.filter((t) => t.status === "upcoming");
   const completed = trips.filter((t) => t.status === "completed");
+  const now = new Date();
+
+  const savedTrips = trips.filter((trip) => trip.tripCopiesAsNew.length > 0);
+  const regularTrips = trips.filter((trip) => trip.tripCopiesAsNew.length === 0);
+
+  const ongoing = regularTrips.filter(
+    (t) => t.startDate <= now && t.endDate >= now
+  );
+  const upcoming = regularTrips.filter((t) => t.startDate > now);
+  const completed = regularTrips.filter((t) => t.endDate < now);
 
   const hasAny = trips.length > 0;
 
@@ -55,6 +66,32 @@ export default async function TripsPage() {
         />
       ) : (
         <div className="space-y-10">
+          {/* ── Saved ── */}
+          <section id="saved-trips" className="space-y-4 scroll-mt-24">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-semibold text-foreground">Saved trips</h2>
+              <Badge className="bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+                {savedTrips.length}
+              </Badge>
+            </div>
+            {savedTrips.length ? (
+              <div className="space-y-3">
+                {savedTrips.map((trip) => (
+                  <TripRowWithStatus
+                    key={trip.id}
+                    trip={trip}
+                    sourceLabel="Saved from community"
+                    showDeleteButton
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="rounded-2xl border border-dashed border-border px-5 py-4 text-sm text-muted-foreground">
+                Save a trip from the Community tab to see it here.
+              </p>
+            )}
+          </section>
+
           {/* ── Ongoing ── */}
           <section className="space-y-4">
             <div className="flex items-center gap-3">

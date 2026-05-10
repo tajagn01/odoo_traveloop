@@ -18,17 +18,11 @@ export default async function AdminTripsPage() {
     );
   }
 
-  const [topCities, topActivities, tripStats, recentTrips] = await Promise.all([
+  const [topCities, tripStats, recentTrips] = await Promise.all([
     prisma.stop.groupBy({
       by: ["cityName"],
       _count: { cityName: true },
       orderBy: { _count: { cityName: "desc" } },
-      take: 8,
-    }),
-    prisma.activity.groupBy({
-      by: ["activityName"],
-      _count: { activityName: true },
-      orderBy: { _count: { activityName: "desc" } },
       take: 8,
     }),
     prisma.trip.aggregate({
@@ -53,7 +47,6 @@ export default async function AdminTripsPage() {
       <div className="space-y-8">
         <AdminCharts
           topCities={topCities.map((c) => ({ name: c.cityName, value: c._count.cityName }))}
-          topActivities={topActivities.map((a) => ({ name: a.activityName, value: a._count.activityName }))}
         />
 
         <Card className="border-border/70">

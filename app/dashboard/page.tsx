@@ -89,67 +89,77 @@ export default async function DashboardPage() {
     }));
 
   return (
-    <AppShell
-      title={`Welcome back, ${session.user.name ?? "Traveler"}`}
-      description="Here is a quick snapshot of your upcoming travel plans."
-      actions={
-        <Button asChild>
-          <Link href="/trips/new">Plan New Trip</Link>
-        </Button>
-      }
-    >
-      <div className="space-y-10">
-        <section className="relative h-64 rounded-xl overflow-hidden mb-8">
-          <img 
-            src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
-            alt="Travel Hero Banner" 
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/40 flex flex-col justify-center px-4 md:px-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Where to next?</h1>
-            <p className="text-sm md:text-base text-white/80 max-w-md">Discover new destinations, plan your itineraries, and keep track of your travel memories.</p>
+    <AppShell>
+      <div className="space-y-12">
+        {/* Welcome Section */}
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 px-2">
+          <div>
+            <h1 className="text-5xl md:text-6xl font-display text-foreground mb-4 leading-tight">
+              Welcome back, <span className="text-[#0D7A73]">{session.user.name?.split(' ')[0] ?? "Traveler"}</span>
+            </h1>
+            <p className="text-muted-foreground text-xl max-w-xl font-medium">
+              Here is a quick snapshot of your upcoming travel plans.
+            </p>
           </div>
-        </section>
+          <Button asChild size="lg" className="rounded-full px-10 bg-[#0D7A73] hover:bg-[#0A625C] text-white font-bold shadow-xl shadow-teal-900/20 transition-all hover:-translate-y-1 active:scale-95">
+            <Link href="/trips/new">Plan New Trip</Link>
+          </Button>
+        </div>
 
-        <section className="space-y-4">
-          <SectionHeading title="Recent trips" description="Pick up where you left off." />
+        {/* Hero Banner */}
+        <div className="relative h-[380px] w-full overflow-hidden rounded-[48px] shadow-2xl group bg-gradient-to-br from-[#0D7A73] to-[#064E4B]">
+          <img 
+            src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=2070" 
+            alt="Majestic Mountains"
+            className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-80"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          <div className="absolute inset-0 flex flex-col justify-end p-10 md:p-16 text-white">
+            <h2 className="text-5xl md:text-7xl font-display mb-6 tracking-tight drop-shadow-lg">Where to next?</h2>
+            <p className="max-w-2xl text-xl md:text-2xl leading-relaxed opacity-95 font-medium drop-shadow-md">
+              Discover new destinations, plan your itineraries, and keep track of your travel memories.
+            </p>
+          </div>
+        </div>
+
+        {/* Recent Trips Section */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between border-b border-border/40 pb-4">
+            <h3 className="text-2xl font-display text-foreground">Recent trips</h3>
+            <p className="text-sm text-muted-foreground">Pick up where you left off.</p>
+          </div>
+          
           {recentTrips.length ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {recentTrips.map((trip) => (
                 <TripCard key={trip.id} trip={trip} />
               ))}
             </div>
           ) : (
-            <EmptyState
-              title="No trips yet"
-              description="Start planning your first itinerary."
-              action={
-                <Button asChild>
-                  <Link href="/trips/new">Plan a trip</Link>
-                </Button>
-              }
-            />
+            <div className="flex flex-col items-center justify-center py-20 bg-card rounded-[32px] border border-border/40">
+              <p className="text-xl font-display text-foreground mb-2">No trips yet</p>
+              <p className="text-muted-foreground mb-6">Start planning your first itinerary.</p>
+              <Button asChild className="rounded-full px-8 bg-[#0D7A73] hover:bg-[#0A625C]">
+                <Link href="/trips/new">Plan a trip</Link>
+              </Button>
+            </div>
           )}
         </section>
 
-        <section className="space-y-4">
-          <SectionHeading
-            title="Upcoming trips"
-            description="Trips starting soon across your calendar."
-          />
-          {upcomingTrips.length ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {/* Upcoming Section */}
+        {upcomingTrips.length > 0 && (
+          <section className="space-y-6">
+            <div className="flex items-center justify-between border-b border-border/40 pb-4">
+              <h3 className="text-2xl font-display text-foreground">Upcoming trips</h3>
+              <p className="text-sm text-muted-foreground">Trips starting soon.</p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {upcomingTrips.map((trip) => (
                 <TripCard key={trip.id} trip={trip} />
               ))}
             </div>
-          ) : (
-            <EmptyState
-              title="No upcoming trips"
-              description="Lock in dates to see them here."
-            />
-          )}
-        </section>
+          </section>
+        )}
 
         <section className="space-y-4">
           <SectionHeading
