@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String   @id @default(uuid())
+  name                String
+  email               String   @unique
+  password            String
+  profilePhoto        String?
+  languagePreference  String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  trips               Trip[]
+}
+
+model Trip {
+  id          String      @id @default(uuid())
+  userId      String
+  tripName    String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  coverPhoto  String?
+  isPublic    Boolean     @default(false)
+  shareToken  String?     @unique
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stops        Stop[]
+  budget       Budget?
+  packingItems PackingItem[]
+  notes        Note[]
+  sharedTrips  SharedTrip[]
+
+  @@index([userId])
+}
+
+model Stop {
+  id            String     @id @default(uuid())
+  tripId        String
+  cityName      String
+  country       String
+  arrivalDate   DateTime
+  departureDate DateTime
+  stopOrder     Int
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  trip       Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  activities Activity[]
+  notes      Note[]
+
+  @@index([tripId])
+}
+
+model Activity {
+  id           String   @id @default(uuid())
+  stopId       String
+  activityName String
+  description  String?
+  activityType String
+  duration     Int
+  cost         Float
+  imageUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  stop Stop @relation(fields: [stopId], references: [id], onDelete: Cascade)
+
+  @@index([stopId])
+}
+
+model Budget {
+  id            String   @id @default(uuid())
+  tripId        String   @unique
+  transportCost Float    @default(0)
+  stayCost      Float    @default(0)
+  mealCost      Float    @default(0)
+  activityCost  Float    @default(0)
+  totalCost     Float    @default(0)
+  budgetLimit   Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
+
+model PackingItem {
+  id        String   @id @default(uuid())
+  tripId    String
+  itemName  String
+  category  String
+  isPacked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+}
+
+model Note {
+  id          String   @id @default(uuid())
+  tripId      String
+  stopId      String?
+  noteContent String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  trip Trip  @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  stop Stop? @relation(fields: [stopId], references: [id], onDelete: SetNull)
+
+  @@index([tripId])
+}
+
+model SharedTrip {
+  id         String   @id @default(uuid())
+  tripId     String
+  shareToken String   @unique
+  createdAt  DateTime @default(now())
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+}

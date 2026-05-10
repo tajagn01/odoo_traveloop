@@ -1,64 +1,120 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, CalendarDays, Compass, Layers } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <div className="min-h-screen">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-16">
+        <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div className="space-y-6">
+            <Badge className="bg-accent/40 text-foreground">New season planning</Badge>
+            <h1 className="text-4xl font-semibold leading-tight sm:text-5xl">
+              Shape multi-city journeys with a calm, detailed travel cockpit.
+            </h1>
+            <p className="max-w-xl text-lg text-muted-foreground">
+              Traveloop keeps your itinerary, budget, activities, packing, and notes in
+              one view. Build faster, share confidently, and keep every stop aligned.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild size="lg">
+                <Link href="/signup">
+                  Get started <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link href="/login">Sign in</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="relative overflow-hidden rounded-4xl border border-border bg-card p-6 shadow-lg">
+            <div className="absolute -top-10 right-6 h-40 w-40 rounded-full bg-accent/40 blur-3xl" />
+            <div className="absolute -bottom-16 left-6 h-48 w-48 rounded-full bg-primary/20 blur-3xl" />
+            <div className="relative space-y-5">
+              <div className="flex items-center justify-between text-sm font-semibold">
+                <span>Upcoming Loop</span>
+                <span className="text-muted-foreground">12 days</span>
+              </div>
+              <div className="grid gap-4">
+                {[
+                  { city: "Lisbon", dates: "Jun 2-5", tag: "Culture" },
+                  { city: "Barcelona", dates: "Jun 5-9", tag: "Food" },
+                  { city: "Nice", dates: "Jun 9-14", tag: "Coast" },
+                ].map((stop) => (
+                  <div
+                    key={stop.city}
+                    className="flex items-center justify-between rounded-2xl border border-border bg-background/80 px-4 py-3"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold">{stop.city}</p>
+                      <p className="text-xs text-muted-foreground">{stop.dates}</p>
+                    </div>
+                    <Badge className="bg-secondary/70 text-foreground">{stop.tag}</Badge>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-between rounded-2xl bg-muted px-4 py-3 text-sm font-semibold">
+                <span>Budget watch</span>
+                <span className="text-foreground">$3,070 / $3,200</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-6 md:grid-cols-3">
+          {[
+            {
+              title: "Itinerary layers",
+              description:
+                "Stops, activities, and notes stay connected so each day has a clear flow.",
+              icon: Layers,
+            },
+            {
+              title: "Budget signals",
+              description:
+                "Track travel, stay, meals, and activity costs with instant overages.",
+              icon: CalendarDays,
+            },
+            {
+              title: "City discovery",
+              description:
+                "Find destinations by region, cost, and popularity before you add them.",
+              icon: Compass,
+            },
+          ].map((item) => (
+            <Card key={item.title} className="border-border/70">
+              <CardHeader className="space-y-3">
+                <item.icon className="h-6 w-6 text-primary" />
+                <CardTitle>{item.title}</CardTitle>
+                <CardDescription>{item.description}</CardDescription>
+              </CardHeader>
+              <CardContent />
+            </Card>
+          ))}
+        </section>
+
+        <section className="rounded-4xl border border-border bg-card px-6 py-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-3xl font-semibold">Start planning in minutes</h2>
+              <p className="mt-2 max-w-xl text-muted-foreground">
+                Create a trip, add cities, and share a public itinerary when you are ready.
+              </p>
+            </div>
+            <Button asChild size="lg">
+              <Link href="/signup">Create your account</Link>
+            </Button>
+          </div>
+        </section>
       </main>
     </div>
   );
