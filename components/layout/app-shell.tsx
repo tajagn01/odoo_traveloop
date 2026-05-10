@@ -13,9 +13,9 @@ type AppShellProps = {
 
 export function AppShell({ title, description, actions, children }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-background pb-16 lg:pb-0">
+    <div className="min-h-screen bg-background pb-16 lg:pb-0 overflow-x-hidden">
       <Navbar />
-      <div className="mx-auto flex w-full max-w-7xl">
+      <div className="mx-auto flex w-full max-w-7xl lg:ml-64 overflow-x-hidden">
         <Sidebar />
         <main className="flex-1 min-w-0 px-4 py-6 md:px-6 md:py-10">
           {(title || description || actions) && (

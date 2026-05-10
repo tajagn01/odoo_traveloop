@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
+export function NewTripForm() {
 import { useState } from "react";
 import { Check, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -84,6 +86,9 @@ export function NewTripForm() {
         <Input id="coverPhoto" name="coverPhoto" type="file" accept="image/*" />
       </div>
 
+      <Button type="submit" className="w-full sm:w-auto">
+        Create Trip &amp; Build Itinerary
+      </Button>
       {/* Suggestions for Places / Activities */}
       <div className="space-y-4 pt-2">
         <div>

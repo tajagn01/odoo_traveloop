@@ -9,10 +9,11 @@ import {
   Settings,
   ShieldCheck,
   Map,
-  Activity,
   Users,
   BarChart2,
   Globe2,
+  User,
+  Backpack,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -22,8 +23,9 @@ const navItems = [
   { label: "My Trips", href: "/trips", icon: FolderOpen },
   { label: "New Trip", href: "/trips/new", icon: Compass },
   { label: "City Search", href: "/cities", icon: Map },
-  { label: "Activities", href: "/activities", icon: Activity },
   { label: "Community", href: "/community", icon: Globe2 },
+  { label: "Packing Checklist", href: "/packing", icon: Backpack },
+  { label: "Profile", href: "/profile", icon: User },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -40,7 +42,7 @@ export function Sidebar() {
     pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <aside className="hidden w-64 shrink-0 border-r border-border/70 bg-background/80 px-4 py-6 lg:block">
+    <aside className="fixed left-0 top-0 hidden h-screen w-64 shrink-0 border-r border-border/70 bg-background/95 px-4 py-6 lg:block overflow-y-auto">
       <nav className="flex flex-col gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
