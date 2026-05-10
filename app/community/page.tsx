@@ -8,6 +8,58 @@ import { getFeaturedItineraries } from "@/lib/community-mock";
 
 const POSTS_PER_PAGE = 6;
 
+  // Fetch some featured/recent posts
+  let posts = [];
+  try {
+    posts = await prisma.communityPost.findMany({
+      take: 6,
+      orderBy: { likes: { _count: "desc" } },
+      include: {
+        author: true,
+        trip: {
+          include: { stops: true },
+        },
+        _count: {
+          select: { likes: true, bookmarks: true },
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching community posts:", error);
+    // Return empty array if database query fails
+  }
+
+  // Calculate duration and destinations for the UI
+  const formattedPosts = posts.map(post => {
+    const stops = post.trip.stops.sort((a, b) => a.stopOrder - b.stopOrder);
+    let durationDays = 0;
+    if (stops.length > 0) {
+      const first = new Date(stops[0].arrivalDate);
+      const last = new Date(stops[stops.length - 1].departureDate);
+      durationDays = Math.ceil((last.getTime() - first.getTime()) / (1000 * 60 * 60 * 24));
+    }
+
+    // Unique countries or cities
+    const destinations = Array.from(new Set(stops.map(s => s.country)));
+
+    return {
+      id: post.id,
+      title: post.title,
+      coverImage: post.coverImage,
+      author: {
+        name: post.author.name,
+        image: post.author.image,
+      },
+      trip: {
+        id: post.trip.id,
+        budgetLimit: post.trip.budgetLimit,
+      },
+      durationDays: durationDays || 1,
+      destinations: destinations.length ? destinations : ["Unknown"],
+      likes: post._count.likes,
+      bookmarks: post._count.bookmarks,
+    };
+  });
 export default async function CommunityPage(props: { searchParams: Promise<{ page?: string }> }) {
   const searchParams = await props.searchParams;
   const currentPage = parseInt(searchParams.page || "1");

@@ -27,6 +27,10 @@ export default async function TripsPage() {
     orderBy: { startDate: "asc" },
   })) as TripListRow[];
 
+  // Filter by the actual status field from database
+  const ongoing = trips.filter((t) => t.status === "ongoing");
+  const upcoming = trips.filter((t) => t.status === "upcoming");
+  const completed = trips.filter((t) => t.status === "completed");
   const now = new Date();
 
   const savedTrips = trips.filter((trip) => trip.tripCopiesAsNew.length > 0);

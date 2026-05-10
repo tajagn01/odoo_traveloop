@@ -1,328 +1,451 @@
-import { PrismaClient, ExpenseCategory } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import crypto from "crypto";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const cities = [
-  { name: "Lisbon", country: "Portugal", region: "Europe", popularityScore: 92, costIndex: 62 },
-  { name: "Nice", country: "France", region: "Europe", popularityScore: 82, costIndex: 76 },
-  { name: "Marrakesh", country: "Morocco", region: "Africa", popularityScore: 84, costIndex: 45 },
-  { name: "Kyoto", country: "Japan", region: "Asia", popularityScore: 90, costIndex: 78 },
-  { name: "Cape Town", country: "South Africa", region: "Africa", popularityScore: 80, costIndex: 52 },
-  { name: "Vancouver", country: "Canada", region: "North America", popularityScore: 86, costIndex: 76 },
-  { name: "Rome", country: "Italy", region: "Europe", popularityScore: 96, costIndex: 72 },
-  { name: "Paris", country: "France", region: "Europe", popularityScore: 98, costIndex: 85 },
-  { name: "Tokyo", country: "Japan", region: "Asia", popularityScore: 97, costIndex: 82 },
-  { name: "New York", country: "USA", region: "North America", popularityScore: 99, costIndex: 90 },
-  { name: "Sydney", country: "Australia", region: "Oceania", popularityScore: 91, costIndex: 80 },
-  { name: "Rio de Janeiro", country: "Brazil", region: "South America", popularityScore: 89, costIndex: 55 },
-  { name: "Dubai", country: "UAE", region: "Asia", popularityScore: 94, costIndex: 88 },
-];
-
-const catalogActivities = {
-  Lisbon: [
-    {
-      activityName: "Sunrise tram ride",
-      description: "Historic tram line with lookout stops.",
-      activityType: "Sightseeing",
-      duration: 2,
-      cost: 28,
-      imageUrl:
-        "https://images.unsplash.com/photo-1548707306-eedb5146f5c9?auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      activityName: "Seafood market crawl",
-      description: "Tastings across the waterfront market.",
-      activityType: "Food",
-      duration: 3,
-      cost: 54,
-      imageUrl:
-        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
-    },
-  ],
-
-  Nice: [
-    {
-      activityName: "Coastal bike cruise",
-      description: "Easy ride with coastal viewpoints.",
-      activityType: "Outdoor",
-      duration: 2,
-      cost: 22,
-      imageUrl:
-        "https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      activityName: "Old Town market stroll",
-      description: "Flower stalls, street snacks, and local produce.",
-      activityType: "Sightseeing",
-      duration: 2,
-      cost: 18,
-      imageUrl:
-        "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80",
-    },
-  ],
-  Kyoto: [
-    {
-      activityName: "Temple district cycling",
-      description: "Leisurely route through eastern temple streets.",
-      activityType: "Outdoor",
-      duration: 3,
-      cost: 26,
-      imageUrl:
-        "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      activityName: "Tea ceremony workshop",
-      description: "Hands-on introduction to Kyoto tea culture.",
-      activityType: "Culture",
-      duration: 2,
-      cost: 48,
-      imageUrl:
-        "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=800&q=80",
-    },
-  ],
-  Vancouver: [
-    {
-      activityName: "Seawall cycling loop",
-      description: "Scenic ride around the waterfront parks.",
-      activityType: "Outdoor",
-      duration: 3,
-      cost: 34,
-      imageUrl:
-        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      activityName: "Granville market tasting",
-      description: "Sample local bakeries and fresh seafood stands.",
-      activityType: "Food",
-      duration: 2,
-      cost: 32,
-      imageUrl:
-        "https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=800&q=80",
-    },
-  ],
-} as const;
-
 async function main() {
-  const hashedPassword = await bcrypt.hash("Password123!", 12);
+  console.log("🌱 Starting seed...");
 
-  await prisma.passwordResetToken.deleteMany();
-  await prisma.savedDestination.deleteMany();
-  await prisma.note.deleteMany();
-  await prisma.packingItem.deleteMany();
-  await prisma.expense.deleteMany();
-  await prisma.activity.deleteMany();
-  await prisma.stop.deleteMany();
-  await prisma.trip.deleteMany();
-  await prisma.city.deleteMany();
-  await prisma.user.deleteMany();
+  // Find the existing demo user
+  const demoUser = await prisma.user.findUnique({
+    where: { email: "demo@traveloop.local" },
+  });
 
-  const user = await prisma.user.create({
-    data: {
-      name: "Avery Park",
-      email: "demo@traveloop.local",
-      password: hashedPassword,
-      profilePhoto: null,
-      languagePreference: "en",
-      emailVerified: new Date(),
+  if (!demoUser) {
+    console.error("❌ Demo user not found. Please create demo@traveloop.local first.");
+    return;
+  }
+
+  console.log("✅ Found demo user:", demoUser.email);
+
+  // Create cities
+  const paris = await prisma.city.upsert({
+    where: { name_country: { name: "Paris", country: "France" } },
+    update: {},
+    create: {
+      name: "Paris",
+      country: "France",
+      region: "Europe",
+      popularityScore: 95,
+      costIndex: 85,
     },
   });
 
-  await prisma.city.createMany({ data: cities });
-
-  const cityRows = await prisma.city.findMany();
-  const cityByName = new Map(cityRows.map((city) => [city.name, city]));
-
-  await prisma.activity.createMany({
-    data: Object.entries(catalogActivities).flatMap(([cityName, activities]) =>
-      activities.map((activity) => ({
-        cityId: cityByName.get(cityName)?.id ?? "",
-        stopId: null,
-        ...activity,
-      }))
-    ),
+  const rome = await prisma.city.upsert({
+    where: { name_country: { name: "Rome", country: "Italy" } },
+    update: {},
+    create: {
+      name: "Rome",
+      country: "Italy",
+      region: "Europe",
+      popularityScore: 92,
+      costIndex: 75,
+    },
   });
 
-  const trip = await prisma.trip.create({
+  const tokyo = await prisma.city.upsert({
+    where: { name_country: { name: "Tokyo", country: "Japan" } },
+    update: {},
+    create: {
+      name: "Tokyo",
+      country: "Japan",
+      region: "Asia",
+      popularityScore: 90,
+      costIndex: 88,
+    },
+  });
+
+  const barcelona = await prisma.city.upsert({
+    where: { name_country: { name: "Barcelona", country: "Spain" } },
+    update: {},
+    create: {
+      name: "Barcelona",
+      country: "Spain",
+      region: "Europe",
+      popularityScore: 88,
+      costIndex: 70,
+    },
+  });
+
+  console.log("✅ Cities created");
+
+  // Trip 1: European Adventure
+  const trip1StartDate = new Date("2026-06-15");
+  const trip1 = await prisma.trip.create({
     data: {
-      userId: user.id,
-      tripName: "Mediterranean Loop",
-      description: "A slow travel route through coastal cities.",
-      startDate: new Date("2026-06-02"),
-      endDate: new Date("2026-06-14"),
-      coverPhoto: null,
-      isPublic: true,
-      shareToken: crypto.randomUUID(),
-      budgetLimit: 3200,
-      packingItems: {
+      userId: demoUser.id,
+      tripName: "European Summer Adventure",
+      description: "A wonderful journey through the heart of Europe, exploring iconic cities and rich culture.",
+      startDate: trip1StartDate,
+      endDate: new Date("2026-06-28"),
+      status: "upcoming",
+      budgetLimit: 4500,
+      shareToken: `demo-europe-${Date.now()}`,
+      coverPhoto: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80",
+      stops: {
         create: [
-          { itemName: "Linen shirts", category: "clothing", isPacked: true },
-          { itemName: "Passport", category: "documents", isPacked: false },
-          { itemName: "Camera", category: "electronics", isPacked: false },
-          { itemName: "Sunscreen", category: "toiletries", isPacked: true },
+          {
+            cityId: paris.id,
+            cityName: "Paris",
+            country: "France",
+            arrivalDate: new Date("2026-06-15"),
+            departureDate: new Date("2026-06-19"),
+            stopOrder: 1,
+            hotelName: "Hotel Le Marais",
+            hotelAddress: "15 Rue des Archives, 75004 Paris",
+            stayCost: 800,
+            transportCost: 150,
+            activities: {
+              create: [
+                {
+                  cityId: paris.id,
+                  activityName: "Eiffel Tower Visit",
+                  description: "Iconic iron lattice tower with panoramic city views from observation decks",
+                  activityType: "sightseeing",
+                  duration: 180,
+                  cost: 26,
+                  rating: 4.8,
+                  bestTime: "Morning",
+                  scheduledDay: 1,
+                  scheduledTime: "09:00",
+                  imageUrl: "https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?auto=format&fit=crop&w=800&q=80",
+                },
+                {
+                  cityId: paris.id,
+                  activityName: "Louvre Museum",
+                  description: "World's largest art museum featuring the Mona Lisa and thousands of masterpieces",
+                  activityType: "culture",
+                  duration: 240,
+                  cost: 17,
+                  rating: 4.9,
+                  bestTime: "Afternoon",
+                  scheduledDay: 1,
+                  scheduledTime: "14:00",
+                  imageUrl: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=80",
+                },
+                {
+                  cityId: paris.id,
+                  activityName: "Seine River Cruise",
+                  description: "Romantic boat tour along the Seine with views of Notre-Dame and bridges",
+                  activityType: "leisure",
+                  duration: 90,
+                  cost: 15,
+                  rating: 4.7,
+                  bestTime: "Evening",
+                  scheduledDay: 2,
+                  scheduledTime: "19:00",
+                  imageUrl: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80",
+                },
+                {
+                  cityId: paris.id,
+                  activityName: "Montmartre Walking Tour",
+                  description: "Explore the artistic neighborhood with Sacré-Cœur Basilica and charming streets",
+                  activityType: "sightseeing",
+                  duration: 150,
+                  cost: 0,
+                  rating: 4.6,
+                  bestTime: "Morning",
+                  scheduledDay: 3,
+                  scheduledTime: "10:00",
+                },
+              ],
+            },
+          },
+          {
+            cityId: barcelona.id,
+            cityName: "Barcelona",
+            country: "Spain",
+            arrivalDate: new Date("2026-06-19"),
+            departureDate: new Date("2026-06-23"),
+            stopOrder: 2,
+            hotelName: "Hotel Gothic Quarter",
+            hotelAddress: "Carrer de la Portaferrissa, 08002 Barcelona",
+            stayCost: 650,
+            transportCost: 120,
+            activities: {
+              create: [
+                {
+                  cityId: barcelona.id,
+                  activityName: "Sagrada Familia",
+                  description: "Gaudí's unfinished masterpiece basilica with stunning architecture",
+                  activityType: "culture",
+                  duration: 120,
+                  cost: 26,
+                  rating: 4.9,
+                  bestTime: "Morning",
+                  scheduledDay: 1,
+                  scheduledTime: "09:30",
+                  imageUrl: "https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=800&q=80",
+                },
+                {
+                  cityId: barcelona.id,
+                  activityName: "Park Güell",
+                  description: "Colorful park designed by Gaudí with mosaic art and city views",
+                  activityType: "sightseeing",
+                  duration: 150,
+                  cost: 10,
+                  rating: 4.7,
+                  bestTime: "Afternoon",
+                  scheduledDay: 1,
+                  scheduledTime: "15:00",
+                },
+                {
+                  cityId: barcelona.id,
+                  activityName: "Beach Day at Barceloneta",
+                  description: "Relax on the famous beach with Mediterranean views",
+                  activityType: "leisure",
+                  duration: 240,
+                  cost: 0,
+                  rating: 4.5,
+                  bestTime: "All day",
+                  scheduledDay: 2,
+                  scheduledTime: "11:00",
+                },
+                {
+                  cityId: barcelona.id,
+                  activityName: "Gothic Quarter Walk",
+                  description: "Explore medieval streets and historic architecture",
+                  activityType: "sightseeing",
+                  duration: 120,
+                  cost: 0,
+                  rating: 4.6,
+                  bestTime: "Evening",
+                  scheduledDay: 3,
+                  scheduledTime: "17:00",
+                },
+              ],
+            },
+          },
+          {
+            cityId: rome.id,
+            cityName: "Rome",
+            country: "Italy",
+            arrivalDate: new Date("2026-06-23"),
+            departureDate: new Date("2026-06-28"),
+            stopOrder: 3,
+            hotelName: "Hotel Trastevere",
+            hotelAddress: "Via della Lungaretta, 00153 Rome",
+            stayCost: 750,
+            transportCost: 100,
+            activities: {
+              create: [
+                {
+                  cityId: rome.id,
+                  activityName: "Colosseum Tour",
+                  description: "Ancient Roman amphitheater and iconic landmark",
+                  activityType: "sightseeing",
+                  duration: 150,
+                  cost: 20,
+                  rating: 4.9,
+                  bestTime: "Morning",
+                  scheduledDay: 1,
+                  scheduledTime: "09:00",
+                  imageUrl: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80",
+                },
+                {
+                  cityId: rome.id,
+                  activityName: "Vatican Museums & Sistine Chapel",
+                  description: "World-renowned art collection and Michelangelo's ceiling",
+                  activityType: "culture",
+                  duration: 210,
+                  cost: 17,
+                  rating: 4.8,
+                  bestTime: "Afternoon",
+                  scheduledDay: 2,
+                  scheduledTime: "13:00",
+                },
+                {
+                  cityId: rome.id,
+                  activityName: "Trevi Fountain & Spanish Steps",
+                  description: "Famous baroque fountain and historic stairway",
+                  activityType: "sightseeing",
+                  duration: 90,
+                  cost: 0,
+                  rating: 4.7,
+                  bestTime: "Evening",
+                  scheduledDay: 3,
+                  scheduledTime: "18:00",
+                },
+                {
+                  cityId: rome.id,
+                  activityName: "Roman Forum Walk",
+                  description: "Ancient ruins in the heart of Rome",
+                  activityType: "sightseeing",
+                  duration: 120,
+                  cost: 16,
+                  rating: 4.6,
+                  bestTime: "Morning",
+                  scheduledDay: 4,
+                  scheduledTime: "10:00",
+                },
+              ],
+            },
+          },
         ],
       },
       expenses: {
         create: [
-          {
-            category: ExpenseCategory.transport,
-            amount: 820,
-            date: new Date("2026-06-02"),
-            note: "Flights and rail passes",
-          },
-          {
-            category: ExpenseCategory.stay,
-            amount: 1450,
-            date: new Date("2026-06-02"),
-            note: "Boutique hotels",
-          },
-          {
-            category: ExpenseCategory.meals,
-            amount: 480,
-            date: new Date("2026-06-03"),
-            note: "Food and cafes",
-          },
-          {
-            category: ExpenseCategory.activities,
-            amount: 320,
-            date: new Date("2026-06-04"),
-            note: "Tours and tickets",
-          },
+          { category: "transport", amount: 650, date: trip1StartDate, note: "Round-trip flights" },
+          { category: "transport", amount: 370, date: trip1StartDate, note: "Inter-city trains" },
+          { category: "meals", amount: 800, date: trip1StartDate, note: "Dining budget" },
+          { category: "activities", amount: 147, date: trip1StartDate, note: "Entrance fees" },
         ],
       },
-      stops: {
+      packingItems: {
         create: [
-          {
-            cityId: cityByName.get("Lisbon")!.id,
-            cityName: "Lisbon",
-            country: "Portugal",
-            arrivalDate: new Date("2026-06-02"),
-            departureDate: new Date("2026-06-05"),
-            stopOrder: 1,
-            activities: {
-              create: [
-                {
-                  cityId: cityByName.get("Lisbon")!.id,
-                  activityName: "Sunrise tram ride",
-                  description: "Historic tram line with lookout stops.",
-                  activityType: "Sightseeing",
-                  duration: 2,
-                  cost: 28,
-                  imageUrl:
-                    "https://images.unsplash.com/photo-1548707306-eedb5146f5c9?auto=format&fit=crop&w=800&q=80",
-                },
-                {
-                  cityId: cityByName.get("Lisbon")!.id,
-                  activityName: "Seafood market crawl",
-                  description: "Tastings across the waterfront market.",
-                  activityType: "Food",
-                  duration: 3,
-                  cost: 54,
-                  imageUrl:
-                    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
-                },
-              ],
-            },
-          },
-
-          {
-            cityId: cityByName.get("Nice")!.id,
-            cityName: "Nice",
-            country: "France",
-            arrivalDate: new Date("2026-06-09"),
-            departureDate: new Date("2026-06-14"),
-            stopOrder: 3,
-            activities: {
-              create: [
-                {
-                  cityId: cityByName.get("Nice")!.id,
-                  activityName: "Coastal bike cruise",
-                  description: "Easy ride with coastal viewpoints.",
-                  activityType: "Outdoor",
-                  duration: 2,
-                  cost: 22,
-                  imageUrl:
-                    "https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&w=800&q=80",
-                },
-              ],
-            },
-          },
-        ],
-      },
-      notes: {
-        create: [
-          {
-            noteContent: "Book rail passes before June 1 for the discount.",
-          },
-          {
-            noteContent: "Bring light layers for coastal evenings.",
-          },
+          { itemName: "Passport", category: "Documents", isPacked: false },
+          { itemName: "Travel insurance", category: "Documents", isPacked: false },
+          { itemName: "Phone charger", category: "Electronics", isPacked: false },
+          { itemName: "Camera", category: "Electronics", isPacked: false },
+          { itemName: "Comfortable walking shoes", category: "Clothing", isPacked: false },
+          { itemName: "Light jacket", category: "Clothing", isPacked: false },
+          { itemName: "Sunglasses", category: "Accessories", isPacked: false },
+          { itemName: "Sunscreen", category: "Toiletries", isPacked: false },
         ],
       },
     },
-    include: { stops: true },
   });
 
-  const lisbonStop = trip.stops.find((stop) => stop.cityName === "Lisbon");
-  if (lisbonStop) {
-    await prisma.note.create({
-      data: {
-        tripId: trip.id,
-        stopId: lisbonStop.id,
-        noteContent: "Reserve the Alfama dinner spot two nights ahead.",
-      },
-    });
-  }
+  console.log("✅ Trip 1 created: European Summer Adventure");
 
-  await prisma.trip.create({
+  // Trip 2: Tokyo Discovery
+  const trip2StartDate = new Date("2026-09-10");
+  const trip2 = await prisma.trip.create({
     data: {
-      userId: user.id,
-      tripName: "Nordic Cities Sprint",
-      description: "Short break focused on design districts.",
-      startDate: new Date("2026-08-11"),
-      endDate: new Date("2026-08-18"),
-      coverPhoto: null,
-      isPublic: false,
-      shareToken: crypto.randomUUID(),
-      budgetLimit: 2800,
+      userId: demoUser.id,
+      tripName: "Tokyo Discovery",
+      description: "Immerse yourself in Japanese culture, technology, and cuisine in the vibrant capital.",
+      startDate: trip2StartDate,
+      endDate: new Date("2026-09-17"),
+      status: "upcoming",
+      budgetLimit: 3500,
+      shareToken: `demo-tokyo-${Date.now()}`,
+      coverPhoto: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80",
       stops: {
         create: [
           {
-            cityId: cityByName.get("Vancouver")!.id,
-            cityName: "Vancouver",
-            country: "Canada",
-            arrivalDate: new Date("2026-08-11"),
-            departureDate: new Date("2026-08-14"),
-            stopOrder: 1,
-          },
-          {
-            cityId: cityByName.get("Kyoto")!.id,
-            cityName: "Kyoto",
+            cityId: tokyo.id,
+            cityName: "Tokyo",
             country: "Japan",
-            arrivalDate: new Date("2026-08-15"),
-            departureDate: new Date("2026-08-18"),
-            stopOrder: 2,
+            arrivalDate: trip2StartDate,
+            departureDate: new Date("2026-09-17"),
+            stopOrder: 1,
+            hotelName: "Shibuya Grand Hotel",
+            hotelAddress: "1-1 Shibuya, Tokyo 150-0002",
+            stayCost: 1200,
+            transportCost: 80,
+            activities: {
+              create: [
+                {
+                  cityId: tokyo.id,
+                  activityName: "Senso-ji Temple",
+                  description: "Tokyo's oldest Buddhist temple in historic Asakusa",
+                  activityType: "culture",
+                  duration: 120,
+                  cost: 0,
+                  rating: 4.7,
+                  bestTime: "Morning",
+                  scheduledDay: 1,
+                  scheduledTime: "09:00",
+                  imageUrl: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?auto=format&fit=crop&w=800&q=80",
+                },
+                {
+                  cityId: tokyo.id,
+                  activityName: "Shibuya Crossing Experience",
+                  description: "World's busiest pedestrian crossing and shopping district",
+                  activityType: "sightseeing",
+                  duration: 90,
+                  cost: 0,
+                  rating: 4.6,
+                  bestTime: "Evening",
+                  scheduledDay: 1,
+                  scheduledTime: "18:00",
+                },
+                {
+                  cityId: tokyo.id,
+                  activityName: "Tokyo Skytree",
+                  description: "Tallest structure in Japan with observation decks",
+                  activityType: "sightseeing",
+                  duration: 150,
+                  cost: 25,
+                  rating: 4.8,
+                  bestTime: "Afternoon",
+                  scheduledDay: 2,
+                  scheduledTime: "14:00",
+                },
+                {
+                  cityId: tokyo.id,
+                  activityName: "Tsukiji Outer Market",
+                  description: "Fresh seafood and street food paradise",
+                  activityType: "food",
+                  duration: 120,
+                  cost: 30,
+                  rating: 4.7,
+                  bestTime: "Morning",
+                  scheduledDay: 3,
+                  scheduledTime: "08:00",
+                },
+                {
+                  cityId: tokyo.id,
+                  activityName: "Meiji Shrine",
+                  description: "Peaceful Shinto shrine in forested grounds",
+                  activityType: "culture",
+                  duration: 90,
+                  cost: 0,
+                  rating: 4.6,
+                  bestTime: "Morning",
+                  scheduledDay: 4,
+                  scheduledTime: "10:00",
+                },
+                {
+                  cityId: tokyo.id,
+                  activityName: "TeamLab Borderless",
+                  description: "Immersive digital art museum",
+                  activityType: "culture",
+                  duration: 180,
+                  cost: 35,
+                  rating: 4.9,
+                  bestTime: "Evening",
+                  scheduledDay: 5,
+                  scheduledTime: "17:00",
+                },
+              ],
+            },
           },
+        ],
+      },
+      expenses: {
+        create: [
+          { category: "transport", amount: 950, date: trip2StartDate, note: "Round-trip flights" },
+          { category: "transport", amount: 80, date: trip2StartDate, note: "JR Pass & local transport" },
+          { category: "stay", amount: 1200, date: trip2StartDate, note: "Hotel accommodation" },
+          { category: "meals", amount: 600, date: trip2StartDate, note: "Food & dining" },
+          { category: "activities", amount: 90, date: trip2StartDate, note: "Attractions" },
+        ],
+      },
+      packingItems: {
+        create: [
+          { itemName: "Passport & visa", category: "Documents", isPacked: false },
+          { itemName: "JR Pass voucher", category: "Documents", isPacked: false },
+          { itemName: "Universal adapter", category: "Electronics", isPacked: false },
+          { itemName: "Pocket WiFi device", category: "Electronics", isPacked: false },
+          { itemName: "Comfortable shoes", category: "Clothing", isPacked: false },
+          { itemName: "Light rain jacket", category: "Clothing", isPacked: false },
+          { itemName: "Reusable water bottle", category: "Accessories", isPacked: false },
         ],
       },
     },
   });
 
-  await prisma.savedDestination.createMany({
-    data: [
-      { userId: user.id, cityId: cityByName.get("Kyoto")!.id },
-      { userId: user.id, cityId: cityByName.get("Vancouver")!.id },
-    ],
-  });
+  console.log("✅ Trip 2 created: Tokyo Discovery");
+
+  console.log("🎉 Seed completed successfully!");
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (error) => {
-    console.error(error);
-    await prisma.$disconnect();
+  .catch((e) => {
+    console.error("❌ Seed failed:", e);
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });

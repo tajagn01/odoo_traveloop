@@ -227,29 +227,6 @@ export default async function TripPage({
           startDate={trip.startDate.toISOString()}
           endDate={trip.endDate.toISOString()}
         />
-
-        {/* ── Share ── */}
-        <Card className="border-border/70">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base font-semibold">
-              <Share2 className="h-4 w-4 text-primary" />
-              Share this itinerary
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {trip.isPublic && shareUrl ? (
-              <ShareActions shareUrl={shareUrl} />
-            ) : (
-              <form action={enableShareAction} className="flex flex-wrap gap-3">
-                <input type="hidden" name="tripId" value={trip.id} />
-                <Button type="submit">Enable public share link</Button>
-                <p className="text-sm text-muted-foreground">
-                  Create a read-only public view of this itinerary.
-                </p>
-              </form>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </AppShell>
   );

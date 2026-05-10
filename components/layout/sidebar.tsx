@@ -15,6 +15,7 @@ import {
   Globe2,
   User,
   Backpack,
+  MapPinned,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -22,7 +23,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "My Trips", href: "/trips", icon: FolderOpen },
-  { label: "New Trip", href: "/trips/new", icon: Compass },
+  { label: "Itineraries", href: "/itinerary", icon: MapPinned },
   { label: "City Search", href: "/cities", icon: Map },
   { label: "Community", href: "/community", icon: Globe2 },
   { label: "Packing Checklist", href: "/packing", icon: Backpack },
