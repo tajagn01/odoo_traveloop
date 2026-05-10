@@ -4,6 +4,8 @@ import { AdminCharts } from "@/components/admin/admin-charts";
 import { requireAuth } from "@/lib/auth-guard";
 import { isAdminEmail } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { formatCurrency } from "@/lib/format";
+import { COMMUNITY_MOCK_COUNT } from "@/lib/community-mock";
 
 export default async function AdminPage() {
   const session = await requireAuth();
@@ -19,27 +21,54 @@ export default async function AdminPage() {
     );
   }
 
-  const [tripCount, userCount, topCities, topActivities, users] =
-    await Promise.all([
-      prisma.trip.count(),
-      prisma.user.count(),
-      prisma.stop.groupBy({
-        by: ["cityName"],
-        _count: { cityName: true },
-        orderBy: { _count: { cityName: "desc" } },
-        take: 5,
-      }),
-      prisma.activity.groupBy({
-        by: ["activityName"],
-        _count: { activityName: true },
-        orderBy: { _count: { activityName: "desc" } },
-        take: 5,
-      }),
-      prisma.user.findMany({
-        include: { _count: { select: { trips: true } } },
-        orderBy: { createdAt: "desc" },
-      }),
-    ]);
+  const [
+    tripCount,
+    userCount,
+    topCities,
+    users,
+    upcomingCount,
+    ongoingCount,
+    completedCount,
+    publicTripCount,
+    communityPostCountDb,
+    tripCopyCount,
+    stopCount,
+    activityCount,
+    avgBudgetResult,
+  ] = await Promise.all([
+    prisma.trip.count(),
+    prisma.user.count(),
+    prisma.stop.groupBy({
+      by: ["cityName"],
+      _count: { cityName: true },
+      orderBy: { _count: { cityName: "desc" } },
+      take: 5,
+    }),
+    prisma.user.findMany({
+      include: { _count: { select: { trips: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.trip.count({ where: { status: "upcoming" } }),
+    prisma.trip.count({ where: { status: "ongoing" } }),
+    prisma.trip.count({ where: { status: "completed" } }),
+    prisma.trip.count({ where: { isPublic: true } }),
+    prisma.communityPost.count(),
+    prisma.tripCopy.count(),
+    prisma.stop.count(),
+    prisma.activity.count(),
+    prisma.trip.aggregate({
+      _avg: { budgetLimit: true },
+    }),
+  ]);
+
+  const avgBudget = avgBudgetResult._avg.budgetLimit;
+  const communityPostCount = communityPostCountDb || COMMUNITY_MOCK_COUNT;
+
+  const tripStatus = [
+    { name: "Upcoming", value: upcomingCount },
+    { name: "Ongoing", value: ongoingCount },
+    { name: "Completed", value: completedCount },
+  ];
 
   return (
     <AppShell
@@ -47,7 +76,7 @@ export default async function AdminPage() {
       description="Monitor usage stats and manage travelers."
     >
       <div className="space-y-8">
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Card className="border-border/70">
             <CardHeader>
               <CardTitle className="text-base font-semibold">Trips created</CardTitle>
@@ -60,6 +89,49 @@ export default async function AdminPage() {
             </CardHeader>
             <CardContent className="text-3xl font-semibold">{userCount}</CardContent>
           </Card>
+          <Card className="border-border/70">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">Public trips</CardTitle>
+            </CardHeader>
+            <CardContent className="text-3xl font-semibold">{publicTripCount}</CardContent>
+          </Card>
+          <Card className="border-border/70">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">Community posts</CardTitle>
+            </CardHeader>
+            <CardContent className="text-3xl font-semibold">{communityPostCount}</CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Card className="border-border/70">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">Total stops</CardTitle>
+            </CardHeader>
+            <CardContent className="text-3xl font-semibold">{stopCount}</CardContent>
+          </Card>
+          <Card className="border-border/70">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">Total activities</CardTitle>
+            </CardHeader>
+            <CardContent className="text-3xl font-semibold">{activityCount}</CardContent>
+          </Card>
+          <Card className="border-border/70">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">Trip copies</CardTitle>
+            </CardHeader>
+            <CardContent className="text-3xl font-semibold">{tripCopyCount}</CardContent>
+          </Card>
+          <Card className="border-border/70">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">Avg. budget</CardTitle>
+            </CardHeader>
+            <CardContent className="text-3xl font-semibold">
+              {avgBudget === null || avgBudget === undefined
+                ? "-"
+                : formatCurrency(avgBudget)}
+            </CardContent>
+          </Card>
         </div>
 
         <AdminCharts
@@ -69,15 +141,7 @@ export default async function AdminPage() {
               value: city._count.cityName,
             })
           )}
-          topActivities={topActivities.map(
-            (activity: {
-              activityName: string;
-              _count: { activityName: number };
-            }) => ({
-              name: activity.activityName,
-              value: activity._count.activityName,
-            })
-          )}
+          tripStatus={tripStatus}
         />
 
         <Card className="border-border/70">

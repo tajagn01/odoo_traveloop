@@ -19,6 +19,8 @@ export type TripCardData = {
   endDate: string;
   stopCount: number;
   status: "upcoming" | "ongoing" | "completed";
+  coverPhoto?: string | null;
+  description?: string | null;
 };
 
 const statusConfig = {
@@ -40,14 +42,12 @@ const statusConfig = {
     icon: CheckCircle,
     color: "text-gray-600",
   },
-  coverPhoto?: string | null;
-  description?: string | null;
 };
 
 export function TripCard({ trip }: { trip: TripCardData }) {
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
-  const config = statusConfig[trip.status];
+  const config = statusConfig[trip.status] || statusConfig.upcoming;
   const StatusIcon = config.icon;
 
   const onDelete = async () => {
@@ -85,18 +85,6 @@ export function TripCard({ trip }: { trip: TripCardData }) {
     }
   };
 
-  return (
-    <Card className="border-border/70">
-      <CardHeader className="space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-lg font-semibold">{trip.tripName}</CardTitle>
-            <Badge variant={config.variant} className="flex items-center gap-1 text-xs">
-              <StatusIcon className={`h-3 w-3 ${config.color}`} />
-              {config.label}
-            </Badge>
-          </div>
-          <Badge>{trip.stopCount} stops</Badge>
   const defaultImage = getPlaceImage(trip.tripName);
 
   return (
@@ -114,7 +102,13 @@ export function TripCard({ trip }: { trip: TripCardData }) {
         </div>
       </div>
       <CardHeader className="space-y-1.5 pb-3 flex-1">
-        <CardTitle className="text-lg font-semibold line-clamp-1">{trip.tripName}</CardTitle>
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="text-lg font-semibold line-clamp-1">{trip.tripName}</CardTitle>
+          <Badge variant={config.variant} className="flex items-center gap-1 text-xs whitespace-nowrap shrink-0">
+            <StatusIcon className={`h-3 w-3 ${config.color}`} />
+            {config.label}
+          </Badge>
+        </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground pb-1">
           <CalendarDays className="h-3.5 w-3.5" />
           {formatDateRange(trip.startDate, trip.endDate)}
@@ -126,20 +120,29 @@ export function TripCard({ trip }: { trip: TripCardData }) {
         )}
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Status buttons */}
-        <div className="flex flex-wrap gap-2">
-          {(["upcoming", "ongoing", "completed"] as const).map((status) => (
-            <Button
-              key={status}
-              size="sm"
-              variant={trip.status === status ? "default" : "outline"}
-              onClick={() => updateStatus(status)}
-              disabled={isUpdating}
-              className="capitalize"
-            >
-              {status}
-            </Button>
-          ))}
+        {/* Status Update Section */}
+        <div className="border-t pt-3">
+          <p className="text-xs font-semibold text-muted-foreground mb-2">Trip Status</p>
+          <div className="flex flex-wrap gap-2">
+            {(["upcoming", "ongoing", "completed"] as const).map((status) => {
+              const isCurrentStatus = trip.status === status;
+              const statusConf = statusConfig[status];
+              const StatusIconComponent = statusConf.icon;
+              return (
+                <Button
+                  key={status}
+                  size="sm"
+                  variant={isCurrentStatus ? "default" : "outline"}
+                  onClick={() => updateStatus(status)}
+                  disabled={isUpdating}
+                  className={`capitalize ${isCurrentStatus ? "shadow-md" : ""}`}
+                >
+                  <StatusIconComponent className="h-3 w-3 mr-1" />
+                  {status}
+                </Button>
+              );
+            })}
+          </div>
         </div>
         {/* Action buttons */}
         <div className="flex flex-wrap gap-2">
@@ -157,18 +160,6 @@ export function TripCard({ trip }: { trip: TripCardData }) {
             Delete
           </Button>
         </div>
-      <CardContent className="flex flex-wrap gap-2 pt-0 mt-auto">
-        <Button asChild size="sm" className="flex-1">
-          <Link href={`/trips/${trip.id}`}>View</Link>
-        </Button>
-        <Button asChild size="sm" variant="outline" className="px-3">
-          <Link href={`/trips/${trip.id}/builder`}>
-            <Pencil className="h-4 w-4" />
-          </Link>
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onDelete} className="px-3 text-red-500 hover:text-red-600 hover:bg-red-500/10">
-          <Trash2 className="h-4 w-4" />
-        </Button>
       </CardContent>
     </Card>
   );

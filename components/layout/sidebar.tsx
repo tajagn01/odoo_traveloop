@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import React from "react";
 import { usePathname } from "next/navigation";
 import {
   Compass,
@@ -37,50 +38,76 @@ const adminItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [isAdmin, setIsAdmin] = React.useState(false);
+  React.useEffect(() => {
+    let mounted = true;
+    fetch('/api/admin/status')
+      .then((r) => r.json())
+      .then((data) => {
+        if (mounted && data?.isAdmin) setIsAdmin(true);
+      })
+      .catch(() => {
+        /* ignore */
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <aside className="fixed left-0 top-0 hidden h-screen w-64 shrink-0 border-r border-border/70 bg-background/95 px-4 py-6 lg:block overflow-y-auto">
-      <nav className="flex flex-col gap-1">
+    <aside className="hidden h-screen w-64 shrink-0 border-r border-border/40 bg-background px-4 py-8 lg:flex flex-col sticky top-0">
+      <nav className="flex-1 flex flex-col gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
+          const active = isActive(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                isActive(item.href) && "bg-muted text-foreground"
+                "group flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-all",
+                active 
+                  ? "bg-muted text-foreground shadow-sm" 
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               )}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className={cn("h-4 w-4 transition-colors", active ? "text-foreground" : "text-muted-foreground/70 group-hover:text-foreground")} />
               {item.label}
             </Link>
           );
         })}
 
-        <div className="my-3 border-t border-border/60" />
-        <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-          Admin
-        </p>
-        {adminItems.map((item) => {
+        <div className="my-6 border-t border-border/40 mx-2" />
+        
+        {isAdmin && (
+          <>
+            <p className="mb-2 px-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/40">
+              Admin
+            </p>
+            {adminItems.map((item) => {
           const Icon = item.icon;
+          const active = isActive(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                isActive(item.href) && "bg-muted text-foreground"
+                "group flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-all",
+                active 
+                  ? "bg-muted text-foreground shadow-sm" 
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               )}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className={cn("h-4 w-4 transition-colors", active ? "text-foreground" : "text-muted-foreground/70 group-hover:text-foreground")} />
               {item.label}
             </Link>
           );
         })}
+          </>
+        )}
       </nav>
     </aside>
   );

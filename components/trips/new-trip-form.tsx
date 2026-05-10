@@ -1,14 +1,12 @@
 "use client";
 
 import { createTripAction } from "@/lib/actions/trips";
+import { useState } from "react";
+import { Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-
-export function NewTripForm() {
-import { useState } from "react";
-import { Check, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 
