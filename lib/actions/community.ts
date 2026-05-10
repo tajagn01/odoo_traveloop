@@ -220,3 +220,62 @@ export async function copyTrip(postId: string) {
   
   return newTrip;
 }
+
+export async function saveCommunityTrip(post: {
+  title: string;
+  coverImage: string | null;
+  author: { name: string; image: string | null };
+  trip: { budgetLimit: number | null };
+  durationDays: number;
+  destinations: string[];
+}) {
+  const session = await requireAuth();
+
+  const startDate = new Date();
+  startDate.setHours(0, 0, 0, 0);
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + Math.max(post.durationDays - 1, 0));
+
+  const trip = await prisma.$transaction(async (tx) => {
+    const newTrip = await tx.trip.create({
+      data: {
+        userId: session.user.id,
+        tripName: post.title,
+        description: `Saved from Community: ${post.author.name}`,
+        startDate,
+        endDate,
+        coverPhoto: post.coverImage,
+        budgetLimit: post.trip.budgetLimit,
+        isPublic: false,
+        shareToken: crypto.randomUUID(),
+      },
+    });
+
+    const communityPost = await tx.communityPost.create({
+      data: {
+        authorId: session.user.id,
+        tripId: newTrip.id,
+        title: post.title,
+        description: `Saved from ${post.author.name}`,
+        coverImage: post.coverImage,
+        tags: post.destinations,
+      },
+    });
+
+    await tx.tripCopy.create({
+      data: {
+        originalPostId: communityPost.id,
+        newTripId: newTrip.id,
+        copiedById: session.user.id,
+      },
+    });
+
+    return newTrip;
+  });
+
+  revalidatePath("/community");
+  revalidatePath("/trips");
+  revalidatePath("/dashboard");
+
+  return trip;
+}

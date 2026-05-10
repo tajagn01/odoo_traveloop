@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Heart, Bookmark, Copy, MapPin, Calendar, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { CopyTripModal } from "./CopyTripModal";
 import { useState } from "react";
@@ -29,7 +30,21 @@ export interface TripShowcaseProps {
 }
 
 export function TripShowcaseCard({ post }: TripShowcaseProps) {
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.likes);
   const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+
+  const toggleLike = () => {
+    setLiked(!liked);
+    setLikeCount(liked ? likeCount - 1 : likeCount + 1);
+  };
+
+  const defaultImage = "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80";
+  const makeImageUrl = (url: string | null | undefined) => {
+    if (!url) return defaultImage;
+    // If URL already has query params, trust it; otherwise append safe Unsplash params
+    return url.includes("?") ? url : `${url}?auto=format&fit=crop&w=1200&q=80`;
+  };
 
   return (
     <>
@@ -41,9 +56,12 @@ export function TripShowcaseCard({ post }: TripShowcaseProps) {
         {/* Cover Image */}
         <Link href={`/community/post/${post.id}`} className="relative h-56 w-full overflow-hidden block">
           <img
-            src={post.coverImage || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80"}
+            src={makeImageUrl(post.coverImage)}
             alt={post.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = defaultImage;
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
           
@@ -70,7 +88,14 @@ export function TripShowcaseCard({ post }: TripShowcaseProps) {
           <div className="flex items-center gap-2 mb-3">
             <div className="h-6 w-6 rounded-full overflow-hidden bg-muted">
               {post.author.image ? (
-                <img src={post.author.image} alt={post.author.name} className="h-full w-full object-cover" />
+                <img 
+                  src={post.author.image} 
+                  alt={post.author.name} 
+                  className="h-full w-full object-cover" 
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
               ) : (
                 <div className="h-full w-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
                   {post.author.name.charAt(0)}
@@ -102,10 +127,16 @@ export function TripShowcaseCard({ post }: TripShowcaseProps) {
           {/* Footer Actions */}
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/60">
             <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-                <Heart className="h-4 w-4 hover:text-rose-500 cursor-pointer transition-colors" />
-                {post.likes}
-              </span>
+              <button 
+                onClick={toggleLike}
+                className={cn(
+                  "flex items-center gap-1.5 text-xs font-medium transition-all active:scale-125",
+                  liked ? "text-rose-500" : "text-muted-foreground hover:text-rose-500"
+                )}
+              >
+                <Heart className={cn("h-4 w-4", liked && "fill-current")} />
+                {likeCount}
+              </button>
             </div>
             <Button 
               size="sm" 
@@ -114,7 +145,7 @@ export function TripShowcaseCard({ post }: TripShowcaseProps) {
               onClick={() => setIsCopyModalOpen(true)}
             >
               <Copy className="h-3 w-3 mr-1.5" />
-              Copy Trip
+              Save Trip
             </Button>
           </div>
         </div>
@@ -123,8 +154,7 @@ export function TripShowcaseCard({ post }: TripShowcaseProps) {
       <CopyTripModal 
         isOpen={isCopyModalOpen} 
         onClose={() => setIsCopyModalOpen(false)} 
-        postId={post.id}
-        tripName={post.title}
+        post={post}
       />
     </>
   );

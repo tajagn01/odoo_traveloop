@@ -5,34 +5,34 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Copy, CheckCircle2, PlaneTakeoff } from "lucide-react";
-import { copyTrip } from "@/lib/actions/community";
+import { saveCommunityTrip } from "@/lib/actions/community";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import type { TripShowcaseProps } from "./TripShowcaseCard";
 
 interface CopyTripModalProps {
   isOpen: boolean;
   onClose: () => void;
-  postId: string;
-  tripName: string;
+  post: TripShowcaseProps["post"];
 }
 
-export function CopyTripModal({ isOpen, onClose, postId, tripName }: CopyTripModalProps) {
+export function CopyTripModal({ isOpen, onClose, post }: CopyTripModalProps) {
   const [status, setStatus] = useState<"idle" | "copying" | "success">("idle");
   const router = useRouter();
 
   const handleCopy = async () => {
     setStatus("copying");
     try {
-      const newTrip = await copyTrip(postId);
+      const newTrip = await saveCommunityTrip(post);
       setStatus("success");
       setTimeout(() => {
         onClose();
-        toast.success("Trip successfully copied!");
-        router.push(`/trips/${newTrip.id}`);
+        toast.success("Trip successfully saved!");
+        router.push(`/trips#saved-trips`);
       }, 1500);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to copy trip. Please try again.");
+      toast.error("Failed to save trip. Please try again.");
       setStatus("idle");
     }
   };
@@ -55,9 +55,9 @@ export function CopyTripModal({ isOpen, onClose, postId, tripName }: CopyTripMod
                 <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 text-primary">
                   <Copy className="h-8 w-8" />
                 </div>
-                <DialogTitle className="text-2xl font-bold mb-2">Copy this itinerary?</DialogTitle>
+                <DialogTitle className="text-2xl font-bold mb-2">Save this itinerary?</DialogTitle>
                 <DialogDescription className="text-base mb-8">
-                  This will create a private duplicate of <strong>"{tripName}"</strong> in your dashboard. You can customize dates, stops, and activities later.
+                  This will create a private saved copy of <strong>"{post.title}"</strong> in your trips. You can customize dates, stops, and activities later.
                 </DialogDescription>
                 
                 <div className="flex w-full gap-3">
@@ -65,7 +65,7 @@ export function CopyTripModal({ isOpen, onClose, postId, tripName }: CopyTripMod
                     Cancel
                   </Button>
                   <Button className="flex-1" onClick={handleCopy}>
-                    Yes, Copy Trip
+                    Yes, Save Trip
                   </Button>
                 </div>
               </motion.div>
@@ -87,8 +87,8 @@ export function CopyTripModal({ isOpen, onClose, postId, tripName }: CopyTripMod
                     <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="4" strokeDasharray="150" strokeLinecap="round" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold mb-2">Cloning Itinerary...</h3>
-                <p className="text-muted-foreground text-sm">Packing all the stops and activities into your suitcase.</p>
+                <h3 className="text-xl font-bold mb-2">Saving Itinerary...</h3>
+                <p className="text-muted-foreground text-sm">Packing all the stops and activities into your trips.</p>
               </motion.div>
             )}
 
@@ -107,8 +107,8 @@ export function CopyTripModal({ isOpen, onClose, postId, tripName }: CopyTripMod
                 >
                   <CheckCircle2 className="h-10 w-10" />
                 </motion.div>
-                <h3 className="text-xl font-bold mb-2">Success!</h3>
-                <p className="text-muted-foreground text-sm">Taking you to your new trip...</p>
+                <h3 className="text-xl font-bold mb-2">Saved!</h3>
+                <p className="text-muted-foreground text-sm">Taking you to your saved trip...</p>
               </motion.div>
             )}
           </AnimatePresence>

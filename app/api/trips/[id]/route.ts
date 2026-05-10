@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/api-auth";
+import { revalidatePath } from "next/cache";
 
 const updateSchema = z.object({
   tripName: z.string().min(2).optional(),
@@ -84,13 +85,28 @@ export async function DELETE(
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const deleted = await prisma.trip.deleteMany({
+  const trip = await prisma.trip.findFirst({
     where: { id, userId },
+    select: { id: true },
   });
 
-  if (!deleted.count) {
+  if (!trip) {
     return NextResponse.json({ message: "Trip not found." }, { status: 404 });
   }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.communityPost.deleteMany({
+      where: { tripId: id },
+    });
+
+    await tx.trip.delete({
+      where: { id },
+    });
+  });
+
+  revalidatePath("/trips");
+  revalidatePath("/dashboard");
+  revalidatePath("/community");
 
   return NextResponse.json({ deleted: true });
 }

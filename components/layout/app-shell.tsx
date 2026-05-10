@@ -11,29 +11,16 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-export function AppShell({ title, description, actions, children }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-background pb-16 lg:pb-0 overflow-x-hidden">
-      <Navbar />
-      <div className="mx-auto flex w-full max-w-7xl lg:ml-64 overflow-x-hidden">
-        <Sidebar />
-        <main className="flex-1 min-w-0 px-4 py-6 md:px-6 md:py-10">
-          {(title || description || actions) && (
-            <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-              <div>
-                {title ? (
-                  <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-                    {title}
-                  </h1>
-                ) : null}
-                {description ? (
-                  <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p>
-                ) : null}
-              </div>
-              {actions ? <div className="flex items-center gap-3">{actions}</div> : null}
-            </div>
-          )}
-          {children}
+    <div className="min-h-screen bg-background flex overflow-hidden selection:bg-teal-100 selection:text-teal-900">
+      <Sidebar />
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+        <Navbar />
+        <main className="flex-1 px-6 md:px-12 pb-24 pt-6">
+          <div className="mx-auto max-w-[1400px] w-full">
+            {children}
+          </div>
         </main>
       </div>
       <MobileNav />

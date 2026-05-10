@@ -8,19 +8,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum ExpenseCategory {
-  transport
-  stay
-  activities
-  meals
-}
-
-enum TripStatus {
-  upcoming
-  ongoing
-  completed
-}
-
 model User {
   id                  String               @id @default(uuid())
   name                String
@@ -32,41 +19,40 @@ model User {
   languagePreference  String?
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
-  trips               Trip[]
-  savedDestinations   SavedDestination[]
-  passwordResetTokens PasswordResetToken[]
   accounts            Account[]
-  sessions            Session[]
-  creatorProfile      CreatorProfile?
-  communityPosts      CommunityPost[]
-  likes               Like[]
   bookmarks           Bookmark[]
+  communityPosts      CommunityPost[]
+  creatorProfile      CreatorProfile?
+  likes               Like[]
+  passwordResetTokens PasswordResetToken[]
+  savedDestinations   SavedDestination[]
+  sessions            Session[]
+  trips               Trip[]
   tripCopies          TripCopy[]
 }
 
 model Trip {
-  id          String     @id @default(uuid())
-  userId      String
-  tripName    String
-  description String?
-  startDate   DateTime
-  endDate     DateTime
-  coverPhoto  String?
-  isPublic    Boolean    @default(false)
-  shareToken  String?    @unique
-  budgetLimit Float?
-  status      TripStatus @default(upcoming)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stops             Stop[]
-  expenses          Expense[]
-  packingItems      PackingItem[]
-  notes             Note[]
-  transportSegments TransportSegment[]
+  id                String             @id @default(uuid())
+  userId            String
+  tripName          String
+  description       String?
+  startDate         DateTime
+  endDate           DateTime
+  coverPhoto        String?
+  isPublic          Boolean            @default(false)
+  shareToken        String?            @unique
+  budgetLimit       Float?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  status            TripStatus         @default(upcoming)
   communityPosts    CommunityPost[]
-  tripCopiesAsNew   TripCopy[]         @relation("TripCopyNewTrip")
+  expenses          Expense[]
+  notes             Note[]
+  packingItems      PackingItem[]
+  stops             Stop[]
+  transportSegments TransportSegment[]
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tripCopiesAsNew   TripCopy?          @relation("TripCopyNewTrip")
 
   @@index([userId])
 }
@@ -80,9 +66,9 @@ model City {
   costIndex       Int
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
-  stops           Stop[]
   activities      Activity[]
   savedBy         SavedDestination[]
+  stops           Stop[]
 
   @@unique([name, country])
   @@index([country])
@@ -91,27 +77,26 @@ model City {
 }
 
 model Stop {
-  id            String   @id @default(uuid())
-  tripId        String
-  cityId        String
-  cityName      String
-  country       String
-  arrivalDate      DateTime
-  departureDate    DateTime
-  stopOrder        Int
-  hotelName        String?
-  hotelAddress     String?
-  bookingReference String?
-  stayCost         Float?
-  transportCost    Float?
-  miscCost         Float?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  trip               Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  city               City               @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  id                 String             @id @default(uuid())
+  tripId             String
+  cityId             String
+  cityName           String
+  country            String
+  arrivalDate        DateTime
+  departureDate      DateTime
+  stopOrder          Int
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  bookingReference   String?
+  hotelAddress       String?
+  hotelName          String?
+  miscCost           Float?
+  stayCost           Float?
+  transportCost      Float?
   activities         Activity[]
   notes              Note[]
+  city               City               @relation(fields: [cityId], references: [id])
+  trip               Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
   departingTransport TransportSegment[] @relation("TransportFrom")
   arrivingTransport  TransportSegment[] @relation("TransportTo")
 
@@ -120,24 +105,23 @@ model Stop {
 }
 
 model Activity {
-  id           String   @id @default(uuid())
-  cityId       String
-  stopId       String?
-  activityName String
-  description  String?
-  activityType String
+  id            String   @id @default(uuid())
+  cityId        String
+  stopId        String?
+  activityName  String
+  description   String?
+  activityType  String
   duration      Int
   cost          Float
   imageUrl      String?
-  rating        Float?
-  bestTime      String?
-  scheduledDay  Int?
-  scheduledTime String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-
-  city City  @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  stop Stop? @relation(fields: [stopId], references: [id], onDelete: Cascade)
+  bestTime      String?
+  rating        Float?
+  scheduledDay  Int?
+  scheduledTime String?
+  city          City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  stop          Stop?    @relation(fields: [stopId], references: [id], onDelete: Cascade)
 
   @@index([activityType])
   @@index([cityId])
@@ -153,8 +137,7 @@ model Expense {
   note      String?
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
-
-  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  trip      Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@index([tripId, category])
 }
@@ -167,8 +150,7 @@ model PackingItem {
   isPacked  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@index([tripId])
 }
@@ -180,9 +162,8 @@ model Note {
   noteContent String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  trip Trip  @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  stop Stop? @relation(fields: [stopId], references: [id], onDelete: SetNull)
+  stop        Stop?    @relation(fields: [stopId], references: [id])
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@index([tripId])
   @@index([stopId])
@@ -193,9 +174,8 @@ model SavedDestination {
   userId    String
   cityId    String
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, cityId])
   @@index([cityId])
@@ -207,8 +187,7 @@ model PasswordResetToken {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
@@ -220,15 +199,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -262,86 +240,89 @@ model TransportSegment {
   notes         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-
-  trip     Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  fromStop Stop @relation("TransportFrom", fields: [fromStopId], references: [id], onDelete: Restrict)
-  toStop   Stop @relation("TransportTo", fields: [toStopId], references: [id], onDelete: Restrict)
+  fromStop      Stop      @relation("TransportFrom", fields: [fromStopId], references: [id])
+  toStop        Stop      @relation("TransportTo", fields: [toStopId], references: [id])
+  trip          Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@index([tripId])
 }
 
-// ----------------------------------------------------
-// COMMUNITY SECTION
-// ----------------------------------------------------
-
 model CreatorProfile {
-  id          String   @id @default(uuid())
-  userId      String   @unique
+  id          String  @id @default(uuid())
+  userId      String  @unique
   bio         String?
-  socialLinks Json?    // Stores links like instagram, website, etc.
-  isVerified  Boolean  @default(false)
-  
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  socialLinks Json?
+  isVerified  Boolean @default(false)
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model CommunityPost {
-  id           String   @id @default(uuid())
-  authorId     String
-  tripId       String
-  title        String
-  description  String?
-  coverImage   String?
-  tags         String[]
-  publishedAt  DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  author       User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  trip         Trip     @relation(fields: [tripId], references: [id], onDelete: Restrict)
-  likes        Like[]
-  bookmarks    Bookmark[]
-  copies       TripCopy[]
+  id          String     @id @default(uuid())
+  authorId    String
+  tripId      String
+  title       String
+  description String?
+  coverImage  String?
+  tags        String[]
+  publishedAt DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  bookmarks   Bookmark[]
+  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  trip        Trip       @relation(fields: [tripId], references: [id])
+  likes       Like[]
+  copies      TripCopy[]
 
   @@index([authorId])
   @@index([tripId])
 }
 
 model Like {
-  id           String   @id @default(uuid())
-  userId       String
-  postId       String
-  createdAt    DateTime @default(now())
-  
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post         CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
+  id        String        @id @default(uuid())
+  userId    String
+  postId    String
+  createdAt DateTime      @default(now())
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, postId])
   @@index([postId])
 }
 
 model Bookmark {
-  id           String   @id @default(uuid())
-  userId       String
-  postId       String
-  createdAt    DateTime @default(now())
-  
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post         CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
+  id        String        @id @default(uuid())
+  userId    String
+  postId    String
+  createdAt DateTime      @default(now())
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, postId])
   @@index([postId])
 }
 
 model TripCopy {
-  id             String   @id @default(uuid())
+  id             String        @id @default(uuid())
   originalPostId String
-  newTripId      String   @unique
+  newTripId      String        @unique
   copiedById     String
-  copiedAt       DateTime @default(now())
-
-  originalPost   CommunityPost @relation(fields: [originalPostId], references: [id], onDelete: Cascade)
-  newTrip        Trip          @relation("TripCopyNewTrip", fields: [newTripId], references: [id], onDelete: Cascade)
+  copiedAt       DateTime      @default(now())
   copiedBy       User          @relation(fields: [copiedById], references: [id], onDelete: Cascade)
+  newTrip        Trip          @relation("TripCopyNewTrip", fields: [newTripId], references: [id], onDelete: Cascade)
+  originalPost   CommunityPost @relation(fields: [originalPostId], references: [id], onDelete: Cascade)
 
   @@index([originalPostId])
   @@index([copiedById])
+}
+
+enum ExpenseCategory {
+  transport
+  stay
+  activities
+  meals
+}
+
+enum TripStatus {
+  upcoming
+  ongoing
+  completed
 }

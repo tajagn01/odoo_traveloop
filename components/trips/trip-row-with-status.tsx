@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, MapPin, Clock, Play, CheckCircle } from "lucide-react";
+import { CalendarDays, MapPin, Clock, Play, CheckCircle, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -37,11 +37,20 @@ const statusConfig = {
   },
 };
 
-export function TripRowWithStatus({ trip }: { trip: TripRowWithStatusProps }) {
+export function TripRowWithStatus({
+  trip,
+  sourceLabel,
+  showDeleteButton = false,
+}: {
+  trip: TripRowWithStatusProps;
+  sourceLabel?: string;
+  showDeleteButton?: boolean;
+}) {
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState(trip.status);
-  const config = statusConfig[currentStatus];
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(trip.status || "upcoming");
+  const config = statusConfig[currentStatus as keyof typeof statusConfig] || statusConfig.upcoming;
   const StatusIcon = config.icon;
 
   const updateStatus = async (newStatus: "upcoming" | "ongoing" | "completed") => {
@@ -74,6 +83,33 @@ export function TripRowWithStatus({ trip }: { trip: TripRowWithStatusProps }) {
     }
   };
 
+  const deleteTrip = async () => {
+    const confirmed = window.confirm(`Delete ${trip.tripName}? This cannot be undone.`);
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/trips/${trip.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        console.error("Delete trip error:", error);
+        toast.error("Failed to delete trip");
+        return;
+      }
+
+      toast.success("Trip deleted");
+      router.refresh();
+    } catch (error) {
+      console.error("Error deleting trip:", error);
+      toast.error("Error deleting trip");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div
       className="block rounded-2xl border border-border bg-card px-5 py-4 shadow-sm transition hover:shadow-md hover:bg-muted/50 cursor-pointer"
@@ -94,6 +130,11 @@ export function TripRowWithStatus({ trip }: { trip: TripRowWithStatusProps }) {
               <StatusIcon className={`h-3 w-3 ${config.color}`} />
               {config.label}
             </Badge>
+            {sourceLabel ? (
+              <Badge variant="outline" className="text-xs text-violet-700 border-violet-200 bg-violet-50 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-900/60">
+                {sourceLabel}
+              </Badge>
+            ) : null}
           </div>
           {trip.description && (
             <p className="text-xs text-muted-foreground line-clamp-1">{trip.description}</p>
@@ -112,31 +153,54 @@ export function TripRowWithStatus({ trip }: { trip: TripRowWithStatusProps }) {
 
           {/* Status Buttons */}
           <div className="flex flex-wrap gap-2 pt-2">
-            {(["upcoming", "ongoing", "completed"] as const).map((status) => (
-              <Button
-                key={status}
-                size="sm"
-                variant={currentStatus === status ? "default" : "outline"}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  updateStatus(status);
-                }}
-                disabled={isUpdating}
-                className="capitalize text-xs"
-              >
-                {status}
-              </Button>
-            ))}
+            {(["upcoming", "ongoing", "completed"] as const).map((status) => {
+              const isCurrentStatus = currentStatus === status;
+              const statusConf = statusConfig[status];
+              const StatusIconComponent = statusConf.icon;
+              return (
+                <Button
+                  key={status}
+                  size="sm"
+                  variant={isCurrentStatus ? "default" : "outline"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    updateStatus(status);
+                  }}
+                  disabled={isUpdating}
+                  className={`capitalize text-xs ${isCurrentStatus ? "shadow-md" : ""}`}
+                >
+                  <StatusIconComponent className="h-3 w-3 mr-1" />
+                  {status}
+                </Button>
+              );
+            })}
           </div>
         </div>
 
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => window.location.href = `/trips/${trip.id}`}
-        >
-          View
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          {showDeleteButton ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteTrip();
+              }}
+              disabled={isDeleting || isUpdating}
+              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+            >
+              <Trash2 className="h-4 w-4 mr-1.5" />
+              Delete
+            </Button>
+          ) : null}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.location.href = `/trips/${trip.id}`}
+          >
+            View
+          </Button>
+        </div>
       </div>
     </div>
   );

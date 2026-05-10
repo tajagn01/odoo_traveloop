@@ -1,14 +1,12 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { CommunityHero } from "@/components/community/CommunityHero";
 import { TripShowcaseCard } from "@/components/community/TripShowcaseCard";
-import { requireAuth } from "@/lib/auth-guard";
-import { prisma } from "@/lib/prisma";
-import { Compass, Sparkles, TrendingUp } from "lucide-react";
+import { Compass, Sparkles, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { getFeaturedItineraries } from "@/lib/community-mock";
 
-export default async function CommunityPage() {
-  const session = await requireAuth();
+const POSTS_PER_PAGE = 6;
 
   // Fetch some featured/recent posts
   let posts = [];
@@ -62,47 +60,102 @@ export default async function CommunityPage() {
       bookmarks: post._count.bookmarks,
     };
   });
+export default async function CommunityPage(props: { searchParams: Promise<{ page?: string }> }) {
+  const searchParams = await props.searchParams;
+  const currentPage = parseInt(searchParams.page || "1");
+  const featuredItineraries = getFeaturedItineraries();
+  const totalPages = Math.ceil(featuredItineraries.length / POSTS_PER_PAGE);
+  
+  const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
+  const endIndex = startIndex + POSTS_PER_PAGE;
+  const currentPosts = featuredItineraries.slice(startIndex, endIndex);
 
   return (
-    <AppShell
-      title="Community"
-      description="Discover shared itineraries and get inspired for your next adventure."
-    >
+    <AppShell>
+      <div className="mb-12">
+        <h1 className="text-5xl md:text-6xl font-display text-foreground mb-4 leading-tight">
+          Traveloop <span className="text-rose-500">Community</span>
+        </h1>
+        <p className="text-muted-foreground text-xl max-w-2xl font-medium">
+          Discover shared itineraries and get inspired for your next adventure.
+        </p>
+      </div>
+      
       <CommunityHero />
 
-      <div className="space-y-16 pb-12">
+      <div className="space-y-16 pb-24">
         {/* Featured Trips Section */}
         <section>
           <div className="flex items-end justify-between mb-8">
             <div>
               <h2 className="text-2xl font-bold flex items-center gap-2 mb-2">
                 <Sparkles className="h-6 w-6 text-primary" />
-                Featured Itineraries
+                Latest Itineraries
               </h2>
-              <p className="text-muted-foreground">Handpicked trips from our top creators.</p>
+              <p className="text-muted-foreground">Showing page {currentPage} of {totalPages}</p>
             </div>
-            <Button variant="ghost" asChild className="hidden sm:flex">
-              <Link href="/community/explore">View All</Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {currentPosts.map((post) => (
+              <TripShowcaseCard key={post.id} post={post} />
+            ))}
+          </div>
+
+          {/* Pagination UI */}
+          <div className="mt-16 flex items-center justify-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-xl"
+              disabled={currentPage <= 1}
+              asChild={currentPage > 1}
+            >
+              {currentPage > 1 ? (
+                <Link href={`/community?page=${currentPage - 1}`}>
+                  <ChevronLeft className="h-5 w-5" />
+                </Link>
+              ) : (
+                <ChevronLeft className="h-5 w-5" />
+              )}
+            </Button>
+            
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalPages }).map((_, i) => {
+                const pageNum = i + 1;
+                const active = pageNum === currentPage;
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={active ? "default" : "outline"}
+                    className={active ? "rounded-xl bg-primary text-primary-foreground" : "rounded-xl"}
+                    asChild
+                  >
+                    <Link href={`/community?page=${pageNum}`}>{pageNum}</Link>
+                  </Button>
+                );
+              })}
+            </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-xl"
+              disabled={currentPage >= totalPages}
+              asChild={currentPage < totalPages}
+            >
+              {currentPage < totalPages ? (
+                <Link href={`/community?page=${currentPage + 1}`}>
+                  <ChevronRight className="h-5 w-5" />
+                </Link>
+              ) : (
+                <ChevronRight className="h-5 w-5" />
+              )}
             </Button>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {formattedPosts.length > 0 ? (
-              formattedPosts.map((post) => (
-                <TripShowcaseCard key={post.id} post={post} />
-              ))
-            ) : (
-              <div className="col-span-full py-12 text-center border-2 border-dashed rounded-xl bg-muted/20">
-                <p className="text-muted-foreground">No featured trips available yet.</p>
-              </div>
-            )}
-          </div>
-          <Button variant="outline" asChild className="w-full mt-6 sm:hidden">
-            <Link href="/community/explore">View All Trips</Link>
-          </Button>
         </section>
 
-        {/* Trending Destinations (Mocked for now) */}
+        {/* Trending Destinations */}
         <section>
           <div className="mb-8">
             <h2 className="text-2xl font-bold flex items-center gap-2 mb-2">
@@ -122,11 +175,11 @@ export default async function CommunityPage() {
               </div>
             </div>
             <div className="relative rounded-2xl overflow-hidden group">
-              <img src="https://images.unsplash.com/photo-1515542622106-78b28af78158?auto=format&fit=crop&w=400&q=80" alt="Italy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <img src="https://images.unsplash.com/photo-1476610182048-b716b8518aae?auto=format&fit=crop&w=600&q=80" alt="Iceland" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4 text-white">
-                <h3 className="text-xl font-bold">Italy</h3>
-                <p className="text-white/80 text-sm">285 trips</p>
+                <h3 className="text-xl font-bold">Iceland</h3>
+                <p className="text-white/80 text-sm">312 trips</p>
               </div>
             </div>
             <div className="relative rounded-2xl overflow-hidden group">
