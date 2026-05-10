@@ -10,11 +10,13 @@ declare module "next-auth" {
       image?: string | null;
       profilePhoto?: string | null;
       languagePreference?: string | null;
+      emailVerified?: Date | null;
     };
   }
 
   interface User {
     languagePreference?: string | null;
+    emailVerified?: Date | null;
   }
 }
 
@@ -23,5 +25,6 @@ declare module "next-auth/jwt" {
     id?: string;
     profilePhoto?: string | null;
     languagePreference?: string | null;
+    emailVerified?: Date | null;
   }
 }

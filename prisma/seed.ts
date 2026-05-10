@@ -6,13 +6,18 @@ const prisma = new PrismaClient();
 
 const cities = [
   { name: "Lisbon", country: "Portugal", region: "Europe", popularityScore: 92, costIndex: 62 },
-  { name: "Barcelona", country: "Spain", region: "Europe", popularityScore: 95, costIndex: 70 },
   { name: "Nice", country: "France", region: "Europe", popularityScore: 82, costIndex: 76 },
   { name: "Marrakesh", country: "Morocco", region: "Africa", popularityScore: 84, costIndex: 45 },
   { name: "Kyoto", country: "Japan", region: "Asia", popularityScore: 90, costIndex: 78 },
   { name: "Cape Town", country: "South Africa", region: "Africa", popularityScore: 80, costIndex: 52 },
   { name: "Vancouver", country: "Canada", region: "North America", popularityScore: 86, costIndex: 76 },
-  { name: "Istanbul", country: "Turkey", region: "Europe", popularityScore: 88, costIndex: 58 },
+  { name: "Rome", country: "Italy", region: "Europe", popularityScore: 96, costIndex: 72 },
+  { name: "Paris", country: "France", region: "Europe", popularityScore: 98, costIndex: 85 },
+  { name: "Tokyo", country: "Japan", region: "Asia", popularityScore: 97, costIndex: 82 },
+  { name: "New York", country: "USA", region: "North America", popularityScore: 99, costIndex: 90 },
+  { name: "Sydney", country: "Australia", region: "Oceania", popularityScore: 91, costIndex: 80 },
+  { name: "Rio de Janeiro", country: "Brazil", region: "South America", popularityScore: 89, costIndex: 55 },
+  { name: "Dubai", country: "UAE", region: "Asia", popularityScore: 94, costIndex: 88 },
 ];
 
 const catalogActivities = {
@@ -36,26 +41,7 @@ const catalogActivities = {
         "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
     },
   ],
-  Barcelona: [
-    {
-      activityName: "Modernist architecture walk",
-      description: "Guided tour of iconic design districts.",
-      activityType: "Culture",
-      duration: 3,
-      cost: 36,
-      imageUrl:
-        "https://images.unsplash.com/photo-1505739776515-2f929d2e4f3f?auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      activityName: "Tapas rooftop evening",
-      description: "Shared plates with skyline views.",
-      activityType: "Food",
-      duration: 2,
-      cost: 44,
-      imageUrl:
-        "https://images.unsplash.com/photo-1515443961218-a51367888e4b?auto=format&fit=crop&w=800&q=80",
-    },
-  ],
+
   Nice: [
     {
       activityName: "Coastal bike cruise",
@@ -239,28 +225,7 @@ async function main() {
               ],
             },
           },
-          {
-            cityId: cityByName.get("Barcelona")!.id,
-            cityName: "Barcelona",
-            country: "Spain",
-            arrivalDate: new Date("2026-06-05"),
-            departureDate: new Date("2026-06-09"),
-            stopOrder: 2,
-            activities: {
-              create: [
-                {
-                  cityId: cityByName.get("Barcelona")!.id,
-                  activityName: "Modernist architecture walk",
-                  description: "Guided tour of iconic design districts.",
-                  activityType: "Culture",
-                  duration: 3,
-                  cost: 36,
-                  imageUrl:
-                    "https://images.unsplash.com/photo-1505739776515-2f929d2e4f3f?auto=format&fit=crop&w=800&q=80",
-                },
-              ],
-            },
-          },
+
           {
             cityId: cityByName.get("Nice")!.id,
             cityName: "Nice",

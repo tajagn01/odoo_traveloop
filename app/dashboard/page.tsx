@@ -14,6 +14,8 @@ import { summarizeExpenses } from "@/lib/expenses";
 type TripWithStopsExpenses = {
   id: string;
   tripName: string;
+  description: string | null;
+  coverPhoto: string | null;
   startDate: Date;
   endDate: Date;
   budgetLimit: number | null;
@@ -53,6 +55,8 @@ export default async function DashboardPage() {
       startDate: trip.startDate.toISOString(),
       endDate: trip.endDate.toISOString(),
       stopCount: trip.stops.length,
+      coverPhoto: trip.coverPhoto,
+      description: trip.description,
     }));
 
   const upcomingIds = new Set(upcomingTrips.map(t => t.id));
@@ -67,6 +71,8 @@ export default async function DashboardPage() {
       startDate: trip.startDate.toISOString(),
       endDate: trip.endDate.toISOString(),
       stopCount: trip.stops.length,
+      coverPhoto: trip.coverPhoto,
+      description: trip.description,
     }));
 
   const budgetHighlights = typedTrips
