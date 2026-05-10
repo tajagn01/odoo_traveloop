@@ -7,28 +7,27 @@ import { Badge } from "@/components/ui/badge";
 import { TripRowWithStatus } from "@/components/trips/trip-row-with-status";
 import { requireAuth } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
-type TripListRow = {
-  id: string;
-  tripName: string;
-  description: string | null;
-  startDate: Date;
-  endDate: Date;
-  status: "upcoming" | "ongoing" | "completed";
-  stops: unknown[];
-  tripCopiesAsNew: Array<{ id: string }>;
-};
+type TripListRow = Prisma.TripGetPayload<{
+  include: {
+    stops: true;
+    tripCopiesAsNew: {
+      select: { id: true };
+    };
+  };
+}>;
 
 export default async function TripsPage() {
   const session = await requireAuth();
-  const trips = (await prisma.trip.findMany({
+  const trips: TripListRow[] = await prisma.trip.findMany({
     where: { userId: session.user.id },
-    include: { stops: true, tripCopiesAsNew: true },
+    include: { stops: true, tripCopiesAsNew: { select: { id: true } } },
     orderBy: { startDate: "asc" },
-  })) as TripListRow[];
+  });
 
-  const savedTrips = trips.filter((trip) => trip.tripCopiesAsNew.length > 0);
-  const regularTrips = trips.filter((trip) => trip.tripCopiesAsNew.length === 0);
+  const savedTrips = trips.filter((trip) => Boolean(trip.tripCopiesAsNew));
+  const regularTrips = trips.filter((trip) => !trip.tripCopiesAsNew);
 
   // Filter by the actual status field from database
   const ongoing = regularTrips.filter((t) => t.status === "ongoing");
