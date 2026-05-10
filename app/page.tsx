@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, CalendarDays, Compass, Layers, Star, MapPin } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { LandingNavbar } from "@/components/layout/landing-navbar";
 import {
   Card,
   CardContent,
@@ -65,10 +66,14 @@ const popularAttractions = [
 export default function Home() {
   return (
     <div className="min-h-screen">
+      <LandingNavbar />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-16">
 
         {/* ── Hero / Banner Section ── */}
-        <section className="relative overflow-hidden rounded-4xl border border-border bg-card shadow-xl">
+        <section
+          id="hero"
+          className="relative overflow-hidden rounded-4xl border border-border bg-card shadow-xl"
+        >
           {/* Gradient blobs */}
           <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-primary/15 blur-3xl" />
           <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
@@ -130,7 +135,7 @@ export default function Home() {
         </section>
 
         {/* ── Top Popular Attractions ── */}
-        <section className="space-y-6">
+        <section id="attractions" className="space-y-6">
           <div>
             <h2 className="text-2xl font-semibold tracking-tight">Top Popular Attractions</h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -167,7 +172,7 @@ export default function Home() {
         </section>
 
         {/* ── Feature Cards ── */}
-        <section className="grid gap-6 md:grid-cols-3">
+        <section id="features" className="grid gap-6 md:grid-cols-3">
           {[
             {
               title: "Itinerary layers",
@@ -200,7 +205,7 @@ export default function Home() {
         </section>
 
         {/* ── CTA ── */}
-        <section className="rounded-4xl border border-border bg-card px-6 py-10">
+        <section id="cta" className="rounded-4xl border border-border bg-card px-6 py-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-3xl font-semibold">Start planning in minutes</h2>
