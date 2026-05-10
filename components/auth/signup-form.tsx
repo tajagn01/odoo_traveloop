@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff, Upload } from "lucide-react";
 import zxcvbn from "zxcvbn";
 
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -110,8 +111,21 @@ export function SignupForm() {
         return;
       }
 
-      toast.success("Account created! Please check your email to verify your account.");
-      router.push("/login");
+      toast.success("Account created! Logging you in...");
+      
+      const signInResult = await signIn("credentials", {
+        redirect: false,
+        email: values.email,
+        password: values.password,
+      });
+
+      if (signInResult?.error) {
+        toast.error("Account created, but automatic login failed. Please log in manually.");
+        router.push("/login");
+      } else {
+        router.push("/dashboard");
+        router.refresh();
+      }
     } catch (error) {
       toast.error("Something went wrong during signup.");
     }

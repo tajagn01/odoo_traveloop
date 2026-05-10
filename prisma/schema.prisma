@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum ExpenseCategory {
@@ -36,6 +37,11 @@ model User {
   passwordResetTokens PasswordResetToken[]
   accounts            Account[]
   sessions            Session[]
+  creatorProfile      CreatorProfile?
+  communityPosts      CommunityPost[]
+  likes               Like[]
+  bookmarks           Bookmark[]
+  tripCopies          TripCopy[]
 }
 
 model Trip {
@@ -53,11 +59,14 @@ model Trip {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stops        Stop[]
-  expenses     Expense[]
-  packingItems PackingItem[]
-  notes        Note[]
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stops             Stop[]
+  expenses          Expense[]
+  packingItems      PackingItem[]
+  notes             Note[]
+  transportSegments TransportSegment[]
+  communityPosts    CommunityPost[]
+  tripCopiesAsNew   TripCopy[]         @relation("TripCopyNewTrip")
 
   @@index([userId])
 }
@@ -87,16 +96,24 @@ model Stop {
   cityId        String
   cityName      String
   country       String
-  arrivalDate   DateTime
-  departureDate DateTime
-  stopOrder     Int
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  arrivalDate      DateTime
+  departureDate    DateTime
+  stopOrder        Int
+  hotelName        String?
+  hotelAddress     String?
+  bookingReference String?
+  stayCost         Float?
+  transportCost    Float?
+  miscCost         Float?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  trip       Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  city       City       @relation(fields: [cityId], references: [id], onDelete: Restrict)
-  activities Activity[]
-  notes      Note[]
+  trip               Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  city               City               @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  activities         Activity[]
+  notes              Note[]
+  departingTransport TransportSegment[] @relation("TransportFrom")
+  arrivingTransport  TransportSegment[] @relation("TransportTo")
 
   @@index([cityId])
   @@index([tripId, stopOrder])
@@ -109,11 +126,15 @@ model Activity {
   activityName String
   description  String?
   activityType String
-  duration     Int
-  cost         Float
-  imageUrl     String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  duration      Int
+  cost          Float
+  imageUrl      String?
+  rating        Float?
+  bestTime      String?
+  scheduledDay  Int?
+  scheduledTime String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   city City  @relation(fields: [cityId], references: [id], onDelete: Cascade)
   stop Stop? @relation(fields: [stopId], references: [id], onDelete: Cascade)
@@ -226,4 +247,101 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model TransportSegment {
+  id            String    @id @default(uuid())
+  tripId        String
+  fromStopId    String
+  toStopId      String
+  mode          String
+  departureTime DateTime?
+  arrivalTime   DateTime?
+  duration      Int?
+  cost          Float?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  trip     Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  fromStop Stop @relation("TransportFrom", fields: [fromStopId], references: [id], onDelete: Restrict)
+  toStop   Stop @relation("TransportTo", fields: [toStopId], references: [id], onDelete: Restrict)
+
+  @@index([tripId])
+}
+
+// ----------------------------------------------------
+// COMMUNITY SECTION
+// ----------------------------------------------------
+
+model CreatorProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  bio         String?
+  socialLinks Json?    // Stores links like instagram, website, etc.
+  isVerified  Boolean  @default(false)
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CommunityPost {
+  id           String   @id @default(uuid())
+  authorId     String
+  tripId       String
+  title        String
+  description  String?
+  coverImage   String?
+  tags         String[]
+  publishedAt  DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  author       User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  trip         Trip     @relation(fields: [tripId], references: [id], onDelete: Restrict)
+  likes        Like[]
+  bookmarks    Bookmark[]
+  copies       TripCopy[]
+
+  @@index([authorId])
+  @@index([tripId])
+}
+
+model Like {
+  id           String   @id @default(uuid())
+  userId       String
+  postId       String
+  createdAt    DateTime @default(now())
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post         CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, postId])
+  @@index([postId])
+}
+
+model Bookmark {
+  id           String   @id @default(uuid())
+  userId       String
+  postId       String
+  createdAt    DateTime @default(now())
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post         CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, postId])
+  @@index([postId])
+}
+
+model TripCopy {
+  id             String   @id @default(uuid())
+  originalPostId String
+  newTripId      String   @unique
+  copiedById     String
+  copiedAt       DateTime @default(now())
+
+  originalPost   CommunityPost @relation(fields: [originalPostId], references: [id], onDelete: Cascade)
+  newTrip        Trip          @relation("TripCopyNewTrip", fields: [newTripId], references: [id], onDelete: Cascade)
+  copiedBy       User          @relation(fields: [copiedById], references: [id], onDelete: Cascade)
+
+  @@index([originalPostId])
+  @@index([copiedById])
 }

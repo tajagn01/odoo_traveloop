@@ -35,6 +35,7 @@ export async function POST(request: Request) {
         name: payload.data.name,
         email,
         password: hashedPassword,
+        emailVerified: new Date(),
       },
     });
 

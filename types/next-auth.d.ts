@@ -16,6 +16,7 @@ declare module "next-auth" {
 
   interface User {
     languagePreference?: string | null;
+    emailVerified?: Date | null;
   }
 }
 
