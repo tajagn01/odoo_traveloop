@@ -7,21 +7,17 @@ export async function GET(
   { params }: { params: Promise<{ token: string }> }
 ) {
   const { token } = await params;
-  const shared = await prisma.sharedTrip.findUnique({
-    where: { shareToken: token },
+  const trip = await prisma.trip.findFirst({
+    where: { shareToken: token, isPublic: true },
     include: {
-      trip: {
-        include: {
-          stops: { include: { activities: true }, orderBy: { stopOrder: "asc" } },
-          budget: true,
-        },
-      },
+      stops: { include: { activities: true }, orderBy: { stopOrder: "asc" } },
+      expenses: true,
     },
   });
 
-  if (!shared) {
+  if (!trip) {
     return NextResponse.json({ message: "Shared trip not found." }, { status: 404 });
   }
 
-  return NextResponse.json({ shared });
+  return NextResponse.json({ trip });
 }

@@ -12,28 +12,22 @@ export async function enableShareAction(formData: FormData) {
 
   const trip = await prisma.trip.findFirst({
     where: { id: tripId, userId: session.user.id },
-    include: { sharedTrips: true },
   });
 
   if (!trip) {
     throw new Error("Trip not found.");
   }
 
-  const token = trip.shareToken ?? crypto.randomUUID();
-
-  if (!trip.sharedTrips.length) {
-    await prisma.sharedTrip.create({
-      data: {
-        tripId: trip.id,
-        shareToken: token,
-      },
-    });
-  }
+  const shareToken = trip.shareToken ?? crypto.randomUUID();
 
   await prisma.trip.update({
     where: { id: trip.id },
-    data: { isPublic: true, shareToken: token },
+    data: {
+      isPublic: true,
+      shareToken,
+    },
   });
 
   revalidatePath(`/trips/${trip.id}`);
+  revalidatePath(`/share/${shareToken}`);
 }

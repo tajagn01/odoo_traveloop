@@ -23,7 +23,7 @@ export async function GET() {
     where: { userId },
     include: {
       stops: true,
-      budget: true,
+      expenses: true,
     },
     orderBy: { updatedAt: "desc" },
   });

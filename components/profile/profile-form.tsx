@@ -23,7 +23,6 @@ export function ProfileForm({ name, email, languagePreference }: ProfileFormProp
     <form
       action={updateProfileAction}
       className="space-y-6"
-      encType="multipart/form-data"
     >
       <div className="grid gap-4 md:grid-cols-2">
         <div>

@@ -27,10 +27,9 @@ export async function GET(
     where: { id, userId },
     include: {
       stops: { include: { activities: true }, orderBy: { stopOrder: "asc" } },
-      budget: true,
+      expenses: true,
       packingItems: true,
       notes: { include: { stop: true }, orderBy: { createdAt: "desc" } },
-      sharedTrips: true,
     },
   });
 

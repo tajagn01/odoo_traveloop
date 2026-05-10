@@ -17,7 +17,7 @@ export function AppShell({ title, description, actions, children }: AppShellProp
       <Navbar />
       <div className="mx-auto flex w-full max-w-7xl">
         <Sidebar />
-        <main className="flex-1 px-6 py-10">
+        <main className="flex-1 min-w-0 px-4 py-6 md:px-6 md:py-10">
           {(title || description || actions) && (
             <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
               <div>

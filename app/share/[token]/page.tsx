@@ -6,6 +6,7 @@ import { StopCard, type StopCardData } from "@/components/itinerary/stop-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDateRange, formatCurrency } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { summarizeExpenses } from "@/lib/expenses";
 
 export default async function SharedTripPage({
   params,
@@ -13,19 +14,15 @@ export default async function SharedTripPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const shared = await prisma.sharedTrip.findUnique({
-    where: { shareToken: token },
+  const trip = await prisma.trip.findFirst({
+    where: { shareToken: token, isPublic: true },
     include: {
-      trip: {
-        include: {
-          stops: { include: { activities: true }, orderBy: { stopOrder: "asc" } },
-          budget: true,
-        },
-      },
+      stops: { include: { activities: true }, orderBy: { stopOrder: "asc" } },
+      expenses: true,
     },
   });
 
-  if (!shared) {
+  if (!trip) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-16">
         <h1 className="text-2xl font-semibold">Shared trip not found</h1>
@@ -33,47 +30,29 @@ export default async function SharedTripPage({
     );
   }
 
-  const trip = shared.trip;
   const headersList = await headers();
   const host = headersList.get("host") ?? "localhost:3000";
   const protocol = headersList.get("x-forwarded-proto") ?? "http";
-  const shareUrl = `${protocol}://${host}/share/${shared.shareToken}`;
+  const shareUrl = `${protocol}://${host}/share/${token}`;
+  const budget = summarizeExpenses(trip.expenses);
 
-  const stops: StopCardData[] = trip.stops.map(
-    (stop: {
-      id: string;
-      cityName: string;
-      country: string;
-      arrivalDate: Date;
-      departureDate: Date;
-      stopOrder: number;
-      activities: Array<{
-        id: string;
-        activityName: string;
-        description: string | null;
-        activityType: string;
-        duration: number;
-        cost: number;
-        imageUrl: string | null;
-      }>;
-    }) => ({
-      id: stop.id,
-      cityName: stop.cityName,
-      country: stop.country,
-      arrivalDate: stop.arrivalDate.toISOString(),
-      departureDate: stop.departureDate.toISOString(),
-      stopOrder: stop.stopOrder,
-      activities: stop.activities.map((activity) => ({
-        id: activity.id,
-        activityName: activity.activityName,
-        description: activity.description,
-        activityType: activity.activityType,
-        duration: activity.duration,
-        cost: activity.cost,
-        imageUrl: activity.imageUrl,
-      })),
-    })
-  );
+  const stops: StopCardData[] = trip.stops.map((stop) => ({
+    id: stop.id,
+    cityName: stop.cityName,
+    country: stop.country,
+    arrivalDate: stop.arrivalDate.toISOString(),
+    departureDate: stop.departureDate.toISOString(),
+    stopOrder: stop.stopOrder,
+    activities: stop.activities.map((activity) => ({
+      id: activity.id,
+      activityName: activity.activityName,
+      description: activity.description,
+      activityType: activity.activityType,
+      duration: activity.duration,
+      cost: activity.cost,
+      imageUrl: activity.imageUrl,
+    })),
+  }));
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-6 py-16">
@@ -92,12 +71,12 @@ export default async function SharedTripPage({
           <div className="rounded-2xl border border-border bg-background px-4 py-3">
             <p className="text-xs text-muted-foreground">Budget</p>
             <p className="text-sm font-semibold">
-              {trip.budget ? formatCurrency(trip.budget.totalCost) : "Not set"}
+              {budget.totalCost ? formatCurrency(budget.totalCost) : "Not set"}
             </p>
           </div>
           <div className="rounded-2xl border border-border bg-background px-4 py-3">
             <p className="text-xs text-muted-foreground">Share token</p>
-            <p className="text-sm font-semibold">{shared.shareToken}</p>
+            <p className="text-sm font-semibold">{token}</p>
           </div>
         </CardContent>
       </Card>

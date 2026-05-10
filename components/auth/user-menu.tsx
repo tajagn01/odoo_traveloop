@@ -42,9 +42,9 @@ export function UserMenu() {
         <DropdownMenuLabel>Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/profile" className="flex items-center gap-2">
+          <Link href="/settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Profile
+            Settings
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem

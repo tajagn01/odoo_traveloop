@@ -36,10 +36,14 @@ export async function updateProfileAction(formData: FormData) {
   }
 
   const avatarFile = formData.get("profilePhoto");
-  const profilePhoto =
-    avatarFile instanceof File && avatarFile.size > 0
-      ? await uploadImage(avatarFile)
-      : undefined;
+  let profilePhoto: string | undefined = undefined;
+  if (avatarFile instanceof File && avatarFile.size > 0) {
+    try {
+      profilePhoto = await uploadImage(avatarFile) ?? undefined;
+    } catch (err) {
+      console.error("Profile photo upload failed, skipping:", err);
+    }
+  }
 
   await prisma.user.update({
     where: { id: session.user.id },
@@ -51,6 +55,7 @@ export async function updateProfileAction(formData: FormData) {
     },
   });
 
+  revalidatePath("/settings");
   revalidatePath("/profile");
 }
 

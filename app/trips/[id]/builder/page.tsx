@@ -9,6 +9,7 @@ import type { ItinerarySection } from "@/components/itinerary/itinerary-section-
 
 type StopQueryRow = {
   id: string;
+  cityId: string;
   cityName: string;
   country: string;
   arrivalDate: Date;
@@ -50,6 +51,7 @@ export default async function ItineraryBuilderPage({
 
   const sections = (trip.stops as StopQueryRow[]).map((stop) => ({
     id: stop.id,
+    cityId: stop.cityId,
     cityName: stop.cityName,
     country: stop.country,
     arrivalDate: stop.arrivalDate.toISOString(),

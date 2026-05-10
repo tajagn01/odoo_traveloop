@@ -1,8 +1,10 @@
+import { ExpenseCategory } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/api-auth";
+import { summarizeExpenses } from "@/lib/expenses";
 
 const budgetSchema = z.object({
   transportCost: z.number().min(0),
@@ -24,14 +26,19 @@ export async function GET(
 
   const trip = await prisma.trip.findFirst({
     where: { id, userId },
-    include: { budget: true },
+    include: { expenses: true },
   });
 
   if (!trip) {
     return NextResponse.json({ message: "Trip not found." }, { status: 404 });
   }
 
-  return NextResponse.json({ budget: trip.budget });
+  return NextResponse.json({
+    budget: {
+      ...summarizeExpenses(trip.expenses),
+      budgetLimit: trip.budgetLimit,
+    },
+  });
 }
 
 export async function POST(
@@ -57,32 +64,41 @@ export async function POST(
     return NextResponse.json({ message: "Invalid budget details." }, { status: 400 });
   }
 
-  const totalCost =
-    payload.data.transportCost +
-    payload.data.stayCost +
-    payload.data.mealCost +
-    payload.data.activityCost;
+  const expenseInputs = [
+    { category: ExpenseCategory.transport, amount: payload.data.transportCost },
+    { category: ExpenseCategory.stay, amount: payload.data.stayCost },
+    { category: ExpenseCategory.meals, amount: payload.data.mealCost },
+    { category: ExpenseCategory.activities, amount: payload.data.activityCost },
+  ];
 
-  const budget = await prisma.budget.upsert({
-    where: { tripId: id },
-    update: {
-      transportCost: payload.data.transportCost,
-      stayCost: payload.data.stayCost,
-      mealCost: payload.data.mealCost,
-      activityCost: payload.data.activityCost,
-      totalCost,
-      budgetLimit: payload.data.budgetLimit ?? null,
-    },
-    create: {
-      tripId: id,
-      transportCost: payload.data.transportCost,
-      stayCost: payload.data.stayCost,
-      mealCost: payload.data.mealCost,
-      activityCost: payload.data.activityCost,
-      totalCost,
+  await prisma.$transaction([
+    prisma.expense.deleteMany({
+      where: { tripId: id, category: { in: expenseInputs.map((expense) => expense.category) } },
+    }),
+    prisma.trip.update({
+      where: { id },
+      data: { budgetLimit: payload.data.budgetLimit ?? null },
+    }),
+    prisma.expense.createMany({
+      data: expenseInputs.map((expense) => ({
+        tripId: id,
+        category: expense.category,
+        amount: expense.amount,
+        date: trip.startDate,
+        note: "Budget planner",
+      })),
+    }),
+  ]);
+
+  return NextResponse.json({
+    budget: {
+      ...summarizeExpenses(
+        expenseInputs.map((expense) => ({
+          category: expense.category,
+          amount: expense.amount,
+        }))
+      ),
       budgetLimit: payload.data.budgetLimit ?? null,
     },
   });
-
-  return NextResponse.json({ budget });
 }

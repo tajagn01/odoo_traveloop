@@ -40,6 +40,7 @@ export type SectionActivity = {
 
 export type ItinerarySection = {
   id: string;
+  cityId: string;
   cityName: string;
   country: string;
   arrivalDate: string;
@@ -386,7 +387,7 @@ function SectionCard({
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Add activities
             </p>
-            <ActivitySearch stopId={section.id} />
+            <ActivitySearch stopId={section.id} cityId={section.cityId} />
           </div>
         </div>
       )}

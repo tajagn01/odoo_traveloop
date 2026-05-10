@@ -8,11 +8,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-const regions = ["All", "Europe", "Asia", "Africa", "North America", "South America", "Oceania"];
+const regions = [
+  "All",
+  "Europe",
+  "Asia",
+  "Africa",
+  "North America",
+  "South America",
+  "Oceania",
+  "Custom",
+];
 
 type CityResult = {
+  id: string;
   cityName: string;
   country: string;
   region: string;
@@ -20,14 +36,27 @@ type CityResult = {
   popularity: number;
 };
 
-export function CitySearch({ tripId }: { tripId: string }) {
+type TripOption = {
+  id: string;
+  tripName: string;
+};
+
+export function CitySearch({
+  trips,
+  savedCityIds,
+}: {
+  trips: TripOption[];
+  savedCityIds: string[];
+}) {
   const router = useRouter();
+  const [selectedTripId, setSelectedTripId] = useState(trips[0]?.id ?? "");
   const [query, setQuery] = useState("");
   const [region, setRegion] = useState("All");
   const [country, setCountry] = useState("");
   const [arrivalDate, setArrivalDate] = useState("");
   const [departureDate, setDepartureDate] = useState("");
   const [results, setResults] = useState<CityResult[]>([]);
+  const [saved, setSaved] = useState<string[]>(savedCityIds);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -41,20 +70,22 @@ export function CitySearch({ tripId }: { tripId: string }) {
       .catch(() => setResults([]));
   }, [query, region, country]);
 
-  const canAdd = useMemo(() => arrivalDate && departureDate, [arrivalDate, departureDate]);
+  const canAdd = useMemo(
+    () => Boolean(selectedTripId && arrivalDate && departureDate),
+    [arrivalDate, departureDate, selectedTripId]
+  );
 
   const handleAdd = async (city: CityResult) => {
     if (!canAdd) {
-      toast.error("Add arrival and departure dates first.");
+      toast.error("Choose a trip and set arrival and departure dates first.");
       return;
     }
 
-    const response = await fetch(`/api/trips/${tripId}/stops`, {
+    const response = await fetch(`/api/trips/${selectedTripId}/stops`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        cityName: city.cityName,
-        country: city.country,
+        cityId: city.id,
         arrivalDate,
         departureDate,
       }),
@@ -69,6 +100,24 @@ export function CitySearch({ tripId }: { tripId: string }) {
     router.refresh();
   };
 
+  const toggleSaved = async (cityId: string) => {
+    const isSaved = saved.includes(cityId);
+    const response = await fetch(`/api/saved-destinations/${cityId}`, {
+      method: isSaved ? "DELETE" : "POST",
+    });
+
+    if (!response.ok) {
+      toast.error("Unable to update saved destinations.");
+      return;
+    }
+
+    setSaved((current) =>
+      isSaved ? current.filter((id) => id !== cityId) : [...current, cityId]
+    );
+    toast.success(isSaved ? "Destination removed." : "Destination saved.");
+    router.refresh();
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid gap-4 rounded-3xl border border-border bg-card p-4 md:grid-cols-4">
@@ -80,6 +129,21 @@ export function CitySearch({ tripId }: { tripId: string }) {
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search by city or country"
           />
+        </div>
+        <div>
+          <Label>Trip</Label>
+          <Select value={selectedTripId} onValueChange={setSelectedTripId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Choose a trip" />
+            </SelectTrigger>
+            <SelectContent>
+              {trips.map((trip) => (
+                <SelectItem key={trip.id} value={trip.id}>
+                  {trip.tripName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <Label>Region</Label>
@@ -126,23 +190,32 @@ export function CitySearch({ tripId }: { tripId: string }) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {results.map((city) => (
-          <Card key={`${city.cityName}-${city.country}`} className="border-border/70">
-            <CardHeader className="space-y-2">
-              <CardTitle className="text-base font-semibold">
-                {city.cityName}, {city.country}
-              </CardTitle>
-              <div className="text-xs text-muted-foreground">
-                Region {city.region} · Cost {city.costIndex} · Popularity {city.popularity}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={() => handleAdd(city)} disabled={!canAdd}>
-                Add to trip
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+        {results.map((city) => {
+          const isSaved = saved.includes(city.id);
+          return (
+            <Card key={city.id} className="border-border/70">
+              <CardHeader className="space-y-2">
+                <CardTitle className="text-base font-semibold">
+                  {city.cityName}, {city.country}
+                </CardTitle>
+                <div className="text-xs text-muted-foreground">
+                  Region {city.region} · Cost {city.costIndex} · Popularity {city.popularity}
+                </div>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2">
+                <Button onClick={() => handleAdd(city)} disabled={!canAdd}>
+                  Add to trip
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => toggleSaved(city.id)}
+                >
+                  {isSaved ? "Saved" : "Save destination"}
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
         {!results.length ? (
           <Card className="border-dashed border-border">
             <CardContent className="py-8 text-center text-sm text-muted-foreground">

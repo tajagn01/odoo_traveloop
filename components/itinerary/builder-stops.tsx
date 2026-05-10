@@ -24,6 +24,7 @@ export type BuilderActivity = {
 
 export type BuilderStop = {
   id: string;
+  cityId: string;
   cityName: string;
   country: string;
   arrivalDate: string;
@@ -197,7 +198,7 @@ export function BuilderStops({ stops }: BuilderStopsProps) {
               )}
             </div>
 
-            <ActivitySearch stopId={stop.id} />
+            <ActivitySearch stopId={stop.id} cityId={stop.cityId} />
           </CardContent>
         </Card>
       ))}

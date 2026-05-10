@@ -2,22 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, FolderOpen, LayoutDashboard, Settings } from "lucide-react";
+import { Compass, FolderOpen, LayoutDashboard, Settings, Map, Activity, Globe2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const items = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Home", icon: LayoutDashboard },
   { href: "/trips", label: "Trips", icon: FolderOpen },
   { href: "/trips/new", label: "New", icon: Compass },
-  { href: "/profile", label: "Profile", icon: Settings },
+  { href: "/cities", label: "Cities", icon: Map },
+  { href: "/activities", label: "Activities", icon: Activity },
+  { href: "/community", label: "Community", icon: Globe2 },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border/70 bg-background px-4 py-2 lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center gap-6 overflow-x-auto border-t border-border/70 bg-background px-4 py-2 pb-safe lg:hidden scrollbar-none">
       {items.map((item) => {
         const Icon = item.icon;
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);

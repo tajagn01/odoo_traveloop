@@ -4,12 +4,44 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/api-auth";
 
-const stopSchema = z.object({
-  cityName: z.string().min(1),
-  country: z.string().min(1),
-  arrivalDate: z.string(),
-  departureDate: z.string(),
-});
+const stopSchema = z
+  .object({
+    cityId: z.string().min(1).optional(),
+    cityName: z.string().min(1).optional(),
+    country: z.string().min(1).optional(),
+    arrivalDate: z.string(),
+    departureDate: z.string(),
+  })
+  .refine((value) => value.cityId || (value.cityName && value.country), {
+    message: "Select a city or provide destination details.",
+  });
+
+async function resolveCity(input: z.infer<typeof stopSchema>) {
+  if (input.cityId) {
+    const city = await prisma.city.findUnique({ where: { id: input.cityId } });
+    if (!city) {
+      throw new Error("City not found.");
+    }
+    return city;
+  }
+
+  return prisma.city.upsert({
+    where: {
+      name_country: {
+        name: input.cityName!,
+        country: input.country!,
+      },
+    },
+    update: {},
+    create: {
+      name: input.cityName!,
+      country: input.country!,
+      region: "Custom",
+      popularityScore: 50,
+      costIndex: 50,
+    },
+  });
+}
 
 export async function GET(
   request: Request,
@@ -31,7 +63,7 @@ export async function GET(
 
   const stops = await prisma.stop.findMany({
     where: { tripId: id },
-    include: { activities: true },
+    include: { activities: true, city: true },
     orderBy: { stopOrder: "asc" },
   });
 
@@ -66,16 +98,24 @@ export async function POST(
     orderBy: { stopOrder: "desc" },
   });
 
-  const stop = await prisma.stop.create({
-    data: {
-      tripId: id,
-      cityName: payload.data.cityName,
-      country: payload.data.country,
-      arrivalDate: new Date(payload.data.arrivalDate),
-      departureDate: new Date(payload.data.departureDate),
-      stopOrder: lastStop ? lastStop.stopOrder + 1 : 1,
-    },
-  });
+  try {
+    const city = await resolveCity(payload.data);
+    const stop = await prisma.stop.create({
+      data: {
+        tripId: id,
+        cityId: city.id,
+        cityName: city.name,
+        country: city.country,
+        arrivalDate: new Date(payload.data.arrivalDate),
+        departureDate: new Date(payload.data.departureDate),
+        stopOrder: lastStop ? lastStop.stopOrder + 1 : 1,
+      },
+      include: { city: true, activities: true },
+    });
 
-  return NextResponse.json({ stop }, { status: 201 });
+    return NextResponse.json({ stop }, { status: 201 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to add stop.";
+    return NextResponse.json({ message }, { status: 400 });
+  }
 }

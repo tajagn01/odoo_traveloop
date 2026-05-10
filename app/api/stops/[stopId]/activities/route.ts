@@ -4,14 +4,20 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/api-auth";
 
-const activitySchema = z.object({
-  activityName: z.string().min(1),
-  description: z.string().optional(),
-  activityType: z.string().min(1),
-  duration: z.number().int().min(1),
-  cost: z.number().min(0),
-  imageUrl: z.string().optional(),
-});
+const activitySchema = z.union([
+  z.object({
+    activityId: z.string().min(1),
+  }),
+  z.object({
+    activityName: z.string().min(1),
+    description: z.string().optional(),
+    activityType: z.string().min(1),
+    duration: z.number().int().min(1),
+    cost: z.number().min(0),
+    imageUrl: z.string().optional().nullable(),
+    cityId: z.string().optional(),
+  }),
+]);
 
 export async function POST(
   request: Request,
@@ -37,17 +43,30 @@ export async function POST(
     return NextResponse.json({ message: "Invalid activity details." }, { status: 400 });
   }
 
-  const activity = await prisma.activity.create({
+  const activity =
+    "activityId" in payload.data
+      ? await prisma.activity.findFirst({
+          where: { id: payload.data.activityId, stopId: null },
+        })
+      : null;
+  const manualActivity = "activityId" in payload.data ? null : payload.data;
+
+  if ("activityId" in payload.data && !activity) {
+    return NextResponse.json({ message: "Activity not found." }, { status: 404 });
+  }
+
+  const created = await prisma.activity.create({
     data: {
+      cityId: activity?.cityId ?? manualActivity?.cityId ?? stop.cityId,
       stopId,
-      activityName: payload.data.activityName,
-      description: payload.data.description ?? null,
-      activityType: payload.data.activityType,
-      duration: payload.data.duration,
-      cost: payload.data.cost,
-      imageUrl: payload.data.imageUrl ?? null,
+      activityName: activity?.activityName ?? manualActivity?.activityName ?? stop.cityName,
+      description: activity?.description ?? manualActivity?.description ?? null,
+      activityType: activity?.activityType ?? manualActivity?.activityType ?? "Sightseeing",
+      duration: activity?.duration ?? manualActivity?.duration ?? 1,
+      cost: activity?.cost ?? manualActivity?.cost ?? 0,
+      imageUrl: activity?.imageUrl ?? manualActivity?.imageUrl ?? null,
     },
   });
 
-  return NextResponse.json({ activity }, { status: 201 });
+  return NextResponse.json({ activity: created }, { status: 201 });
 }

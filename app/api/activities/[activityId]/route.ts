@@ -28,7 +28,7 @@ export async function PATCH(
     include: { stop: { include: { trip: true } } },
   });
 
-  if (!activity || activity.stop.trip.userId !== userId) {
+  if (!activity || !activity.stop || activity.stop.trip.userId !== userId) {
     return NextResponse.json({ message: "Activity not found." }, { status: 404 });
   }
 
@@ -67,7 +67,7 @@ export async function DELETE(
     include: { stop: { include: { trip: true } } },
   });
 
-  if (!activity || activity.stop.trip.userId !== userId) {
+  if (!activity || !activity.stop || activity.stop.trip.userId !== userId) {
     return NextResponse.json({ message: "Activity not found." }, { status: 404 });
   }
 
