@@ -1,13 +1,12 @@
 import Link from "next/link";
-import { CalendarDays, MapPin } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
+import { TripRowWithStatus } from "@/components/trips/trip-row-with-status";
 import { requireAuth } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { formatDateRange } from "@/lib/format";
 
 type TripListRow = {
   id: string;
@@ -15,40 +14,9 @@ type TripListRow = {
   description: string | null;
   startDate: Date;
   endDate: Date;
+  status: "upcoming" | "ongoing" | "completed";
   stops: unknown[];
 };
-
-function TripRow({ trip }: { trip: TripListRow }) {
-  return (
-    <Link
-      href={`/trips/${trip.id}`}
-      className="block rounded-2xl border border-border bg-card px-5 py-4 shadow-sm transition hover:shadow-md hover:bg-muted/50"
-    >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <p className="font-semibold text-foreground">{trip.tripName}</p>
-          {trip.description && (
-            <p className="text-xs text-muted-foreground line-clamp-1">{trip.description}</p>
-          )}
-          <div className="flex flex-wrap items-center gap-3 pt-1">
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-              <CalendarDays className="h-3.5 w-3.5" />
-              {formatDateRange(trip.startDate, trip.endDate)}
-            </span>
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5" />
-              {(trip.stops as unknown[]).length}{" "}
-              {(trip.stops as unknown[]).length === 1 ? "stop" : "stops"}
-            </span>
-          </div>
-        </div>
-        <Button asChild variant="outline" size="sm">
-          <span>View</span>
-        </Button>
-      </div>
-    </Link>
-  );
-}
 
 export default async function TripsPage() {
   const session = await requireAuth();
@@ -101,7 +69,7 @@ export default async function TripsPage() {
             {ongoing.length ? (
               <div className="space-y-3">
                 {ongoing.map((trip) => (
-                  <TripRow key={trip.id} trip={trip} />
+                  <TripRowWithStatus key={trip.id} trip={trip} />
                 ))}
               </div>
             ) : (
@@ -122,7 +90,7 @@ export default async function TripsPage() {
             {upcoming.length ? (
               <div className="space-y-3">
                 {upcoming.map((trip) => (
-                  <TripRow key={trip.id} trip={trip} />
+                  <TripRowWithStatus key={trip.id} trip={trip} />
                 ))}
               </div>
             ) : (
@@ -141,7 +109,7 @@ export default async function TripsPage() {
             {completed.length ? (
               <div className="space-y-3">
                 {completed.map((trip) => (
-                  <TripRow key={trip.id} trip={trip} />
+                  <TripRowWithStatus key={trip.id} trip={trip} />
                 ))}
               </div>
             ) : (

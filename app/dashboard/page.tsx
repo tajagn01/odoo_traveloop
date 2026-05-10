@@ -17,6 +17,7 @@ type TripWithStopsExpenses = {
   startDate: Date;
   endDate: Date;
   budgetLimit: number | null;
+  status: "upcoming" | "ongoing" | "completed";
   stops: unknown[];
   expenses: Array<{ category: "transport" | "stay" | "activities" | "meals"; amount: number }>;
 };
@@ -53,6 +54,7 @@ export default async function DashboardPage() {
       startDate: trip.startDate.toISOString(),
       endDate: trip.endDate.toISOString(),
       stopCount: trip.stops.length,
+      status: trip.status,
     }));
 
   const upcomingIds = new Set(upcomingTrips.map(t => t.id));
@@ -67,6 +69,7 @@ export default async function DashboardPage() {
       startDate: trip.startDate.toISOString(),
       endDate: trip.endDate.toISOString(),
       stopCount: trip.stops.length,
+      status: trip.status,
     }));
 
   const budgetHighlights = typedTrips
