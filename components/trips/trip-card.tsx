@@ -131,6 +131,7 @@ export function TripCard({ trip }: { trip: TripCardData }) {
         <Button size="sm" variant="ghost" onClick={onDelete} className="px-3 text-red-500 hover:text-red-600 hover:bg-red-500/10">
           <Trash2 className="h-4 w-4" />
         </Button>
+      </CardContent>
       <CardContent className="space-y-3">
         {/* Status Update Section */}
         <div className="border-t pt-3">

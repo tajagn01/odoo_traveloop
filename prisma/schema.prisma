@@ -1,6 +1,10 @@
 generator client {
   provider = "prisma-client-js"
 }
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "./ERD.svg"
+}
 
 datasource db {
   provider  = "postgresql"
@@ -326,3 +330,5 @@ enum TripStatus {
   ongoing
   completed
 }
+
+
