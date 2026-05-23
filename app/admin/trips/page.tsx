@@ -4,8 +4,15 @@ import { prisma } from "@/lib/prisma";
 import { isAdminEmail } from "@/lib/admin";
 import { AdminCharts } from "@/components/admin/admin-charts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
 import { summarizeExpenses } from "@/lib/expenses";
+
+const statusConfig = {
+  upcoming: { label: "Upcoming", className: "bg-blue-100 text-blue-700 border-blue-200" },
+  ongoing: { label: "Ongoing", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+  completed: { label: "Completed", className: "bg-slate-100 text-slate-700 border-slate-200" },
+} as const;
 
 export default async function AdminTripsPage() {
   const session = await requireAuth();
@@ -18,7 +25,7 @@ export default async function AdminTripsPage() {
     );
   }
 
-  const [topCities, tripStats, recentTrips] = await Promise.all([
+  const [topCities, tripStats, recentTrips, upcomingCount, ongoingCount, completedCount] = await Promise.all([
     prisma.stop.groupBy({
       by: ["cityName"],
       _count: { cityName: true },
@@ -37,7 +44,16 @@ export default async function AdminTripsPage() {
         expenses: true,
       },
     }),
+    prisma.trip.count({ where: { status: "upcoming" } }),
+    prisma.trip.count({ where: { status: "ongoing" } }),
+    prisma.trip.count({ where: { status: "completed" } }),
   ]);
+
+  const tripStatus = [
+    { name: "Upcoming", value: upcomingCount },
+    { name: "Ongoing", value: ongoingCount },
+    { name: "Completed", value: completedCount },
+  ];
 
   return (
     <AppShell
@@ -47,6 +63,7 @@ export default async function AdminTripsPage() {
       <div className="space-y-8">
         <AdminCharts
           topCities={topCities.map((c) => ({ name: c.cityName, value: c._count.cityName }))}
+          tripStatus={tripStatus}
         />
 
         <Card className="border-border/70">
@@ -58,13 +75,18 @@ export default async function AdminTripsPage() {
               const totalCost = summarizeExpenses(
                 trip.expenses.map((e) => ({ category: e.category, amount: Number(e.amount) }))
               ).totalCost;
+              const statusKey = (trip.status ?? "upcoming") as keyof typeof statusConfig;
+              const statusInfo = statusConfig[statusKey] ?? statusConfig.upcoming;
               return (
                 <div
                   key={trip.id}
                   className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm"
                 >
-                  <div>
-                    <p className="font-semibold">{trip.tripName}</p>
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold">{trip.tripName}</p>
+                      <Badge className={statusInfo.className}>{statusInfo.label}</Badge>
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       by {trip.user.name ?? trip.user.email} · {trip._count.stops} stops
                     </p>

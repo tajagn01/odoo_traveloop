@@ -7,26 +7,29 @@ import { Badge } from "@/components/ui/badge";
 import { TripRowWithStatus } from "@/components/trips/trip-row-with-status";
 import { requireAuth } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
-type TripListRow = {
-  id: string;
-  tripName: string;
-  description: string | null;
-  startDate: Date;
-  endDate: Date;
-  status: "upcoming" | "ongoing" | "completed";
-  stops: unknown[];
-  tripCopiesAsNew: Array<{ id: string }>;
-};
+type TripListRow = Prisma.TripGetPayload<{
+  include: {
+    stops: true;
+    tripCopiesAsNew: {
+      select: { id: true };
+    };
+  };
+}>;
 
 export default async function TripsPage() {
   const session = await requireAuth();
-  const trips = (await prisma.trip.findMany({
+  const trips: TripListRow[] = await prisma.trip.findMany({
     where: { userId: session.user.id },
-    include: { stops: true, tripCopiesAsNew: true },
+    include: { stops: true, tripCopiesAsNew: { select: { id: true } } },
     orderBy: { startDate: "asc" },
-  })) as TripListRow[];
+  });
 
+  const savedTrips = trips.filter((trip) => Boolean(trip.tripCopiesAsNew));
+  const regularTrips = trips.filter((trip) => !trip.tripCopiesAsNew);
+
+<<<<<<< HEAD
   const now = new Date();
 
   const savedTrips = trips.filter((trip) => trip.tripCopiesAsNew?.length > 0);
@@ -37,6 +40,12 @@ export default async function TripsPage() {
   );
   const upcoming = regularTrips.filter((t) => t.startDate > now);
   const completed = regularTrips.filter((t) => t.endDate < now);
+=======
+  // Filter by the actual status field from database
+  const ongoing = regularTrips.filter((t) => t.status === "ongoing");
+  const upcoming = regularTrips.filter((t) => t.status === "upcoming");
+  const completed = regularTrips.filter((t) => t.status === "completed");
+>>>>>>> defd7af6b5f821aa868535d190a977e490363853
 
   const hasAny = trips.length > 0;
 

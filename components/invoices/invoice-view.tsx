@@ -25,14 +25,14 @@ type Stop = {
   arrivalDate: Date;
   departureDate: Date;
   hotelName: string | null;
-  hotelCost: number | null;
+  stayCost: number | null;
   activities: Activity[];
 };
 
 type Expense = {
   id: string;
   category: string;
-  description: string | null;
+  note: string | null;
   amount: number;
   date: Date;
 };
@@ -80,7 +80,7 @@ export function InvoiceView({
 
   // Add hotel expenses
   trip.stops.forEach((stop) => {
-    if (stop.hotelCost && stop.hotelCost > 0) {
+    if (stop.stayCost && stop.stayCost > 0) {
       const nights = Math.ceil(
         (new Date(stop.departureDate).getTime() - new Date(stop.arrivalDate).getTime()) /
           (1000 * 60 * 60 * 24)
@@ -89,8 +89,8 @@ export function InvoiceView({
         category: "hotel",
         description: `Hotel booking ${stop.cityName}`,
         qty: `${nights} nights`,
-        unitCost: stop.hotelCost / nights,
-        amount: stop.hotelCost,
+        unitCost: stop.stayCost / nights,
+        amount: stop.stayCost,
       });
     }
   });
@@ -114,7 +114,7 @@ export function InvoiceView({
   trip.expenses.forEach((expense) => {
     expenseItems.push({
       category: expense.category,
-      description: expense.description || expense.category,
+      description: expense.note || expense.category,
       qty: 1,
       unitCost: expense.amount,
       amount: expense.amount,

@@ -219,7 +219,7 @@ export function ItineraryClient({ trips }: { trips: Trip[] }) {
                   <Link href={`/trips/${selectedTrip.id}`}>View Full Trip</Link>
                 </Button>
                 <Button 
-                  variant="destructive" 
+                  variant="outline" 
                   size="sm"
                   onClick={() => handleDeleteTrip(selectedTrip.id)}
                   disabled={deletingTrip === selectedTrip.id}

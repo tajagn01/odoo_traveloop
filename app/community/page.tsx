@@ -1,3 +1,5 @@
+import { prisma } from "@/lib/prisma";
+
 import { AppShell } from "@/components/layout/app-shell";
 import { CommunityHero } from "@/components/community/CommunityHero";
 import { TripShowcaseCard } from "@/components/community/TripShowcaseCard";
@@ -9,7 +11,7 @@ import { getFeaturedItineraries } from "@/lib/community-mock";
 const POSTS_PER_PAGE = 6;
 
   // Fetch some featured/recent posts
-  let posts = [];
+  let posts: any[] = [];
   try {
     posts = await prisma.communityPost.findMany({
       take: 6,
@@ -31,7 +33,7 @@ const POSTS_PER_PAGE = 6;
 
   // Calculate duration and destinations for the UI
   const formattedPosts = posts.map(post => {
-    const stops = post.trip.stops.sort((a, b) => a.stopOrder - b.stopOrder);
+    const stops = post.trip.stops.sort((a: any, b: any) => a.stopOrder - b.stopOrder);
     let durationDays = 0;
     if (stops.length > 0) {
       const first = new Date(stops[0].arrivalDate);
@@ -40,7 +42,7 @@ const POSTS_PER_PAGE = 6;
     }
 
     // Unique countries or cities
-    const destinations = Array.from(new Set(stops.map(s => s.country)));
+    const destinations = Array.from(new Set(stops.map((s: any) => s.country)));
 
     return {
       id: post.id,

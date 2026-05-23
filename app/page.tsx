@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Check, Compass, Gauge, LayoutGrid, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { LandingNavbar } from "@/components/layout/landing-navbar";
 import {
   Card,
   CardContent,
@@ -44,6 +45,7 @@ const quickSteps = [
 export default function Home() {
   return (
     <div className="min-h-screen">
+<<<<<<< HEAD
       <main className="mx-auto flex w-full max-w-[1400px] flex-col gap-16 px-0 pb-16 pt-0">
         <section className="relative overflow-hidden rounded-4xl border border-[#E2D6C4] bg-[#F4EFE6] text-[#1F1B16] shadow-2xl">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#FBE8D0,transparent_60%)]" />
@@ -105,6 +107,19 @@ export default function Home() {
               </Button>
             </div>
           </div>
+=======
+      <LandingNavbar />
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-16">
+
+        {/* ── Hero / Banner Section ── */}
+        <section
+          id="hero"
+          className="relative overflow-hidden rounded-4xl border border-border bg-card shadow-xl"
+        >
+          {/* Gradient blobs */}
+          <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-primary/15 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
+>>>>>>> defd7af6b5f821aa868535d190a977e490363853
 
           <div className="relative grid gap-10 p-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:p-12">
             <div className="space-y-6">
@@ -218,7 +233,12 @@ export default function Home() {
           </div>
         </section>
 
+<<<<<<< HEAD
         <section className="space-y-6">
+=======
+        {/* ── Top Popular Attractions ── */}
+        <section id="attractions" className="space-y-6">
+>>>>>>> defd7af6b5f821aa868535d190a977e490363853
           <div>
             <h2 className="text-2xl font-semibold tracking-tight">Everything you need to plan fast</h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -239,6 +259,7 @@ export default function Home() {
           </div>
         </section>
 
+<<<<<<< HEAD
         <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="rounded-4xl border border-border bg-card px-6 py-10">
             <h3 className="text-3xl font-semibold">A polished workflow, end to end.</h3>
@@ -279,6 +300,43 @@ export default function Home() {
         </section>
 
         <section className="rounded-4xl border border-border bg-card px-6 py-10">
+=======
+        {/* ── Feature Cards ── */}
+        <section id="features" className="grid gap-6 md:grid-cols-3">
+          {[
+            {
+              title: "Itinerary layers",
+              description:
+                "Stops, activities, and notes stay connected so each day has a clear flow.",
+              icon: Layers,
+            },
+            {
+              title: "Budget signals",
+              description:
+                "Track travel, stay, meals, and activity costs with instant overages.",
+              icon: CalendarDays,
+            },
+            {
+              title: "City discovery",
+              description:
+                "Find destinations by region, cost, and popularity before you add them.",
+              icon: Compass,
+            },
+          ].map((item) => (
+            <Card key={item.title} className="border-border/70">
+              <CardHeader className="space-y-3">
+                <item.icon className="h-6 w-6 text-primary" />
+                <CardTitle>{item.title}</CardTitle>
+                <CardDescription>{item.description}</CardDescription>
+              </CardHeader>
+              <CardContent />
+            </Card>
+          ))}
+        </section>
+
+        {/* ── CTA ── */}
+        <section id="cta" className="rounded-4xl border border-border bg-card px-6 py-10">
+>>>>>>> defd7af6b5f821aa868535d190a977e490363853
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-3xl font-semibold">Ready to build your next trip?</h2>

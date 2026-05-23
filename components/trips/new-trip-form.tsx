@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Plus, X, MapPin, Calendar } from "lucide-react";
+import { Calendar, Check, MapPin, Plus, X } from "lucide-react";
 import { createTripAction } from "@/lib/actions/trips";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
