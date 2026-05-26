@@ -34,11 +34,11 @@ export function FilterSidebar() {
             <DollarSign className="h-4 w-4 text-muted-foreground" /> Max Budget
           </Label>
           <div className="px-2">
-            <Slider defaultValue={[2000]} max={10000} step={100} className="my-4" />
+            <Slider defaultValue={[100000]} max={500000} step={5000} className="my-4" />
           </div>
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>$0</span>
-            <span className="font-medium text-foreground">$2,000</span>
+            <span>₹0</span>
+            <span className="font-medium text-foreground">₹1,00,000</span>
           </div>
         </div>
 

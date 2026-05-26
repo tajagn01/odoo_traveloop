@@ -15,25 +15,15 @@ import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const signupSchema = z.object({
-  firstName: z.string().min(2, { message: "First name must be at least 2 characters." }),
-  lastName: z.string().min(2, { message: "Last name must be at least 2 characters." }),
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Enter a valid email." }),
   password: z.string().min(8, { message: "Password must be at least 8 characters." }),
-  confirmPassword: z.string(),
   terms: z.boolean().refine((val) => val === true, {
     message: "You must agree to the terms and conditions.",
   }),
-  homeAddress: z.string().optional(),
-  city: z.string().optional(),
-  country: z.string().optional(),
-  additionalInfo: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
 });
 
 type SignupValues = z.infer<typeof signupSchema>;
@@ -89,18 +79,14 @@ export function SignupForm() {
         imageBase64 = await uploadToCloudinary(profileImage);
       }
 
-      const name = `${values.firstName.trim()} ${values.lastName.trim()}`;
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          name, 
+          name: values.name.trim(), 
           email: values.email, 
           password: values.password,
-          image: imageBase64,
-          address: values.homeAddress,
-          city: values.city,
-          country: values.country
+          image: imageBase64
         }),
       });
 
@@ -165,17 +151,10 @@ export function SignupForm() {
         <span className="text-xs text-muted-foreground">Profile Image (Optional)</span>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5 relative group">
-          <Label htmlFor="firstName" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-focus-within:text-primary transition-colors">First Name</Label>
-          <Input id="firstName" placeholder="Jane" className="transition-all focus:ring-2 focus:ring-primary/20" {...register("firstName")} />
-          {errors.firstName ? <p className="text-xs text-red-600">{errors.firstName.message}</p> : null}
-        </div>
-        <div className="space-y-1.5 relative group">
-          <Label htmlFor="lastName" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-focus-within:text-primary transition-colors">Last Name</Label>
-          <Input id="lastName" placeholder="Doe" className="transition-all focus:ring-2 focus:ring-primary/20" {...register("lastName")} />
-          {errors.lastName ? <p className="text-xs text-red-600">{errors.lastName.message}</p> : null}
-        </div>
+      <div className="space-y-1.5 relative group">
+        <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-focus-within:text-primary transition-colors">Full Name</Label>
+        <Input id="name" placeholder="Jane Doe" className="transition-all focus:ring-2 focus:ring-primary/20" {...register("name")} />
+        {errors.name ? <p className="text-xs text-red-600">{errors.name.message}</p> : null}
       </div>
 
       <div className="space-y-1.5 relative group">
@@ -184,7 +163,7 @@ export function SignupForm() {
         {errors.email ? <p className="text-xs text-red-600">{errors.email.message}</p> : null}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-1">
         <div className="space-y-1.5 relative group">
           <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-focus-within:text-primary transition-colors">Password</Label>
           <div className="relative">
@@ -214,24 +193,6 @@ export function SignupForm() {
             </div>
           )}
           {errors.password ? <p className="text-xs text-red-600">{errors.password.message}</p> : null}
-        </div>
-        
-        <div className="space-y-1.5 relative group">
-          <Label htmlFor="confirmPassword" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-focus-within:text-primary transition-colors">Confirm Password</Label>
-          <Input id="confirmPassword" type="password" placeholder="Repeat password" className="transition-all focus:ring-2 focus:ring-primary/20" {...register("confirmPassword")} />
-          {errors.confirmPassword ? <p className="text-xs text-red-600">{errors.confirmPassword.message}</p> : null}
-        </div>
-      </div>
-
-      {/* Optional Fields omitted for brevity, keeping just city/country as requested */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5 group">
-          <Label htmlFor="city" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-focus-within:text-primary transition-colors">City (Optional)</Label>
-          <Input id="city" placeholder="New York" {...register("city")} />
-        </div>
-        <div className="space-y-1.5 group">
-          <Label htmlFor="country" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-focus-within:text-primary transition-colors">Country (Optional)</Label>
-          <Input id="country" placeholder="United States" {...register("country")} />
         </div>
       </div>
 
@@ -263,6 +224,29 @@ export function SignupForm() {
             <span>Creating account...</span>
           </motion.div>
         ) : "Create Account"}
+      </Button>
+      <div className="flex items-center gap-3">
+        <div className="h-px flex-1 bg-border" />
+        <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+          or
+        </span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+      <Button
+        variant="outline"
+        type="button"
+        className="w-full gap-2"
+        onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+      >
+        <span className="inline-flex h-5 w-5 items-center justify-center">
+          <svg viewBox="0 0 48 48" aria-hidden="true" className="h-5 w-5">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.02 1.53 7.4 2.8l5.08-5.09C33.2 4.2 28.9 2 24 2 14.9 2 7.1 7.2 3.4 14.6l6.3 4.9C11.5 13.3 17.3 9.5 24 9.5z" />
+            <path fill="#34A853" d="M46 24.5c0-1.4-.1-2.5-.4-3.7H24v7h12.4c-.6 3-2.3 5.6-4.9 7.3l7.5 5.8C43.1 36.3 46 31 46 24.5z" />
+            <path fill="#4A90E2" d="M9.7 28.1c-.5-1.5-.8-3.1-.8-4.8s.3-3.3.8-4.8l-6.3-4.9C1.5 16.5 0 20.1 0 23.3s1.5 6.8 3.4 9.7l6.3-4.9z" />
+            <path fill="#FBBC05" d="M24 46c4.9 0 9-1.6 12-4.3l-7.5-5.8c-2 1.4-4.5 2.1-4.5 2.1-6.7 0-12.5-3.8-14.3-9.2l-6.3 4.9C7.1 40.8 14.9 46 24 46z" />
+          </svg>
+        </span>
+        Continue with Google
       </Button>
       <p className="text-xs text-muted-foreground text-center">
         Already have an account?{" "}

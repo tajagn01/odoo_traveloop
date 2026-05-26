@@ -114,6 +114,29 @@ export function LoginForm() {
           </motion.div>
         ) : "Sign in"}
       </Button>
+      <div className="flex items-center gap-3">
+        <div className="h-px flex-1 bg-border" />
+        <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+          or
+        </span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+      <Button
+        variant="outline"
+        type="button"
+        className="w-full gap-2"
+        onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+      >
+        <span className="inline-flex h-5 w-5 items-center justify-center">
+          <svg viewBox="0 0 48 48" aria-hidden="true" className="h-5 w-5">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.02 1.53 7.4 2.8l5.08-5.09C33.2 4.2 28.9 2 24 2 14.9 2 7.1 7.2 3.4 14.6l6.3 4.9C11.5 13.3 17.3 9.5 24 9.5z" />
+            <path fill="#34A853" d="M46 24.5c0-1.4-.1-2.5-.4-3.7H24v7h12.4c-.6 3-2.3 5.6-4.9 7.3l7.5 5.8C43.1 36.3 46 31 46 24.5z" />
+            <path fill="#4A90E2" d="M9.7 28.1c-.5-1.5-.8-3.1-.8-4.8s.3-3.3.8-4.8l-6.3-4.9C1.5 16.5 0 20.1 0 23.3s1.5 6.8 3.4 9.7l6.3-4.9z" />
+            <path fill="#FBBC05" d="M24 46c4.9 0 9-1.6 12-4.3l-7.5-5.8c-2 1.4-4.5 2.1-4.5 2.1-6.7 0-12.5-3.8-14.3-9.2l-6.3 4.9C7.1 40.8 14.9 46 24 46z" />
+          </svg>
+        </span>
+        Continue with Google
+      </Button>
       <Button 
         variant="outline" 
         type="button" 

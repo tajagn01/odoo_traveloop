@@ -3,6 +3,9 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { ProfileForm } from "@/components/profile/profile-form";
+import { DeleteAccountButton } from "@/components/profile/delete-account";
+import { SavedDestinations } from "@/components/profile/saved-destinations";
 
 export default async function ProfilePage() {
   const session = await requireAuth();
@@ -14,6 +17,10 @@ export default async function ProfilePage() {
         include: { stops: true },
         orderBy: { startDate: "desc" },
       },
+      savedDestinations: {
+        include: { city: true },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 
@@ -24,9 +31,10 @@ export default async function ProfilePage() {
   const now = new Date();
   const preplannedTrips = user.trips.filter((t) => t.startDate > now);
   const previousTrips = user.trips.filter((t) => t.endDate < now);
+  const profileImage = user.image ?? user.profilePhoto ?? null;
 
   return (
-    <AppShell title="Profile" description="View your profile and trip history">
+    <AppShell title="Profile" description="View your profile, edit travel preferences, and review trip history">
       <div className="space-y-12">
         {/* User Profile Header */}
         <div className="rounded-2xl border border-border bg-card p-8">
@@ -34,8 +42,8 @@ export default async function ProfilePage() {
             {/* Profile Image */}
             <div className="flex flex-shrink-0 items-center justify-center">
               <div className="h-40 w-40 rounded-full border-2 border-border bg-muted flex items-center justify-center overflow-hidden">
-                {user.image ? (
-                  <img src={user.image} alt={user.name || "User"} className="h-full w-full object-cover" />
+                {profileImage ? (
+                  <img src={profileImage} alt={user.name || "User"} className="h-full w-full object-cover" />
                 ) : (
                   <div className="h-full w-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center text-4xl font-bold text-white">
                     {(user.name || "U").charAt(0).toUpperCase()}
@@ -59,13 +67,33 @@ export default async function ProfilePage() {
                   <p><span className="font-medium">Total trips:</span> {user.trips.length}</p>
                 </div>
               </div>
-
-              <div className="pt-4">
-                <Button asChild>
-                  <Link href="/settings">Edit Profile</Link>
-                </Button>
-              </div>
             </div>
+          </div>
+        </div>
+
+        {/* Dynamic Profile Settings & Saved Destinations */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Profile Form */}
+          <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+            <h2 className="text-xl font-bold text-foreground">Profile Settings</h2>
+            <ProfileForm
+              name={user.name}
+              email={user.email}
+              languagePreference={user.languagePreference}
+            />
+          </div>
+
+          {/* Saved Destinations */}
+          <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+            <h2 className="text-xl font-bold text-foreground">Saved Destinations</h2>
+            <SavedDestinations
+              destinations={user.savedDestinations.map((saved) => ({
+                cityId: saved.cityId,
+                cityName: saved.city.name,
+                country: saved.city.country,
+                region: saved.city.region,
+              }))}
+            />
           </div>
         </div>
 
@@ -141,6 +169,17 @@ export default async function ProfilePage() {
               <p className="text-sm text-muted-foreground">No completed trips yet.</p>
             </div>
           )}
+        </div>
+
+        {/* Danger Zone */}
+        <div className="rounded-2xl border border-red-200/50 bg-red-50/5 dark:bg-red-950/5 p-6 border-dashed space-y-2">
+          <h2 className="text-lg font-bold text-red-600 dark:text-red-500">Danger Zone</h2>
+          <p className="text-sm text-muted-foreground">
+            Deleting your account will permanently remove all your trips, itineraries, and settings. This action is irreversible.
+          </p>
+          <div className="pt-2">
+            <DeleteAccountButton />
+          </div>
         </div>
       </div>
     </AppShell>

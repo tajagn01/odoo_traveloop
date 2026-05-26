@@ -13,22 +13,49 @@ export async function POST(
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const city = await prisma.city.findUnique({ where: { id: cityId } });
-  if (!city) {
-    return NextResponse.json({ message: "City not found." }, { status: 404 });
+  let resolvedCityId = cityId;
+
+  // Intercept dynamic temporary IDs generated during live Wikipedia internet searches
+  if (cityId.startsWith("temp__")) {
+    const parts = cityId.split("__");
+    const cityName = decodeURIComponent(parts[1]);
+    const countryName = decodeURIComponent(parts[2] || "Global");
+
+    const resolvedCity = await prisma.city.upsert({
+      where: {
+        name_country: {
+          name: cityName,
+          country: countryName,
+        },
+      },
+      update: {},
+      create: {
+        name: cityName,
+        country: countryName,
+        region: "Custom",
+        popularityScore: 50,
+        costIndex: 50,
+      },
+    });
+    resolvedCityId = resolvedCity.id;
+  } else {
+    const city = await prisma.city.findUnique({ where: { id: cityId } });
+    if (!city) {
+      return NextResponse.json({ message: "City not found." }, { status: 404 });
+    }
   }
 
   const saved = await prisma.savedDestination.upsert({
     where: {
       userId_cityId: {
         userId,
-        cityId,
+        cityId: resolvedCityId,
       },
     },
     update: {},
     create: {
       userId,
-      cityId,
+      cityId: resolvedCityId,
     },
     include: { city: true },
   });
@@ -46,8 +73,27 @@ export async function DELETE(
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
+  let resolvedCityId = cityId;
+
+  // Intercept dynamic temporary IDs generated during live Wikipedia internet searches
+  if (cityId.startsWith("temp__")) {
+    const parts = cityId.split("__");
+    const cityName = decodeURIComponent(parts[1]);
+    const countryName = decodeURIComponent(parts[2] || "Global");
+
+    const city = await prisma.city.findFirst({
+      where: {
+        name: { equals: cityName, mode: "insensitive" },
+        country: { equals: countryName, mode: "insensitive" },
+      },
+    });
+    if (city) {
+      resolvedCityId = city.id;
+    }
+  }
+
   await prisma.savedDestination.deleteMany({
-    where: { userId, cityId },
+    where: { userId, cityId: resolvedCityId },
   });
 
   return NextResponse.json({ deleted: true });

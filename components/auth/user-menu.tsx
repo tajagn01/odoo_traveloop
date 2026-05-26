@@ -2,7 +2,7 @@
 
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -13,8 +13,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
-export function UserMenu() {
+export function UserMenu({ isCollapsed = false }: { isCollapsed?: boolean }) {
   const { data } = useSession();
   const user = data?.user;
   const initials = user?.name
@@ -28,23 +29,28 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-3 rounded-full border border-border bg-card px-2 py-1">
+        <button className={cn(
+          "flex items-center rounded-full border border-border bg-card transition-all duration-200",
+          isCollapsed ? "p-1 justify-center" : "gap-3 px-2 py-1"
+        )}>
           <Avatar>
             <AvatarImage src={user?.profilePhoto ?? ""} alt={user?.name ?? "User"} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
-          <span className="hidden text-sm font-semibold sm:inline">
-            {user?.name ?? "Traveler"}
-          </span>
+          {!isCollapsed && (
+            <span className="hidden text-sm font-semibold sm:inline pr-2">
+              {user?.name ?? "Traveler"}
+            </span>
+          )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/settings" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Settings
+          <Link href="/profile" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Profile
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar, Check, MapPin, Plus, X } from "lucide-react";
 import { createTripAction } from "@/lib/actions/trips";
 import { Button } from "@/components/ui/button";
@@ -48,8 +48,314 @@ type Expense = {
   date?: string;
 };
 
+interface SuggestionCardProps {
+  s: {
+    id: string;
+    title: string;
+    desc: string;
+    image: string;
+  };
+  locationInput: string;
+  today: string;
+  isSelected: boolean;
+  onAddStop: (
+    suggestionId: string,
+    stopData: {
+      cityName: string;
+      country: string;
+      arrivalDate: string;
+      departureDate: string;
+      hotelName?: string;
+      hotelCost?: number;
+      transportCost?: number;
+      activityName: string;
+      activityDesc: string;
+      activityCost?: number;
+    }
+  ) => void;
+  onRemoveStop: (cityName: string, suggestionId: string) => void;
+  budgetLimit: number;
+  remainingBudget: number;
+}
+
+export function SuggestionCard({
+  s,
+  locationInput,
+  today,
+  isSelected,
+  onAddStop,
+  onRemoveStop,
+  budgetLimit,
+  remainingBudget,
+}: SuggestionCardProps) {
+  const [arrivalDate, setArrivalDate] = useState("");
+  const [departureDate, setDepartureDate] = useState("");
+  const [hotelName, setHotelName] = useState("");
+  const [hotelCost, setHotelCost] = useState("");
+  const [transportCost, setTransportCost] = useState("");
+  const [attractionCost, setAttractionCost] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const parts = s.id.split(',');
+  const cityName = s.title || parts[0]?.trim() || "Unknown";
+  const country = parts[1]?.trim() || locationInput || "Unknown";
+
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (isOpen) {
+      const tripStartDate = (document.getElementById('startDate') as HTMLInputElement)?.value || today;
+      const tripEndDate = (document.getElementById('endDate') as HTMLInputElement)?.value || today;
+      setArrivalDate(tripStartDate);
+      setDepartureDate(tripEndDate);
+      setHotelName("");
+      setHotelCost("");
+      setTransportCost("");
+      setAttractionCost("");
+    }
+  };
+
+  const parsedHotelCost = parseFloat(hotelCost) || 0;
+  const parsedTransportCost = parseFloat(transportCost) || 0;
+  const parsedAttractionCost = parseFloat(attractionCost) || 0;
+  const placeTotal = parsedHotelCost + parsedTransportCost + parsedAttractionCost;
+
+  const newRemainingBudget = remainingBudget - placeTotal;
+
+  const handleAdd = () => {
+    if (!arrivalDate || !departureDate) {
+      alert("Please select arrival and departure dates.");
+      return;
+    }
+    onAddStop(s.id, {
+      cityName,
+      country,
+      arrivalDate,
+      departureDate,
+      hotelName: hotelName || undefined,
+      hotelCost: parsedHotelCost || undefined,
+      transportCost: parsedTransportCost || undefined,
+      activityName: s.title,
+      activityDesc: s.desc,
+      activityCost: parsedAttractionCost || undefined,
+    });
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Card
+          className={`relative h-32 md:h-40 overflow-hidden cursor-pointer group transition-all duration-300 border-2 ${
+            isSelected ? "border-primary ring-2 ring-primary/30" : "border-transparent hover:border-primary/50"
+          }`}
+        >
+          <img
+            src={s.image}
+            alt={s.title}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          
+          <div className="absolute inset-0 p-3 flex flex-col justify-between z-10">
+            <div className="flex justify-end">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                isSelected ? "bg-primary text-primary-foreground" : "bg-black/40 text-white/70 backdrop-blur-sm group-hover:bg-black/60"
+              }`}>
+                {isSelected ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+              </div>
+            </div>
+            <div>
+              <h4 className="text-white font-medium text-sm md:text-base leading-tight">
+                {s.title}
+              </h4>
+              <p className="text-white/70 text-[10px] md:text-xs mt-0.5 line-clamp-1 mb-1.5 font-normal">
+                {s.desc}
+              </p>
+              <div>
+                <Button variant="secondary" size="sm" className="h-6 text-[10px] px-2 bg-white/20 hover:bg-white/40 text-white border-none backdrop-blur-md">
+                  {isSelected ? "Configure Stop" : "Add Stop & Budget"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-border/70 z-[60] max-h-[90vh] overflow-y-auto">
+        <div className="relative h-44 w-full">
+          <img
+            src={s.image}
+            alt={s.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+          <div className="absolute bottom-4 left-4 right-4 text-white">
+            <Badge className="mb-1 bg-primary text-primary-foreground">Suggestion</Badge>
+            <DialogTitle className="text-xl font-bold">{cityName}, {country}</DialogTitle>
+          </div>
+        </div>
+        <div className="p-5 space-y-4">
+          <DialogDescription className="text-sm">
+            {s.desc}. Customize your stop details and see real-time impact on your budget.
+          </DialogDescription>
+
+          {isSelected ? (
+            <div className="space-y-4">
+              <div className="p-3 bg-muted rounded-lg text-sm text-center font-medium">
+                This place is already added to your itinerary stops list!
+              </div>
+              <Button
+                variant="outline"
+                className="w-full font-semibold border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                onClick={() => {
+                  onRemoveStop(cityName, s.id);
+                  setOpen(false);
+                }}
+              >
+                Remove Stop from Trip
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid gap-3 grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="arrivalDate" className="text-xs font-semibold">Arrival Date</Label>
+                  <Input
+                    id="arrivalDate"
+                    type="date"
+                    min={today}
+                    value={arrivalDate}
+                    onChange={(e) => setArrivalDate(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="departureDate" className="text-xs font-semibold">Departure Date</Label>
+                  <Input
+                    id="departureDate"
+                    type="date"
+                    min={today}
+                    value={departureDate}
+                    onChange={(e) => setDepartureDate(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="hotelName" className="text-xs font-semibold">Hotel Name (Optional)</Label>
+                <Input
+                  id="hotelName"
+                  placeholder="e.g. Grand View Resort"
+                  value={hotelName}
+                  onChange={(e) => setHotelName(e.target.value)}
+                />
+              </div>
+
+              <div className="grid gap-3 grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="hotelCost" className="text-xs font-semibold">Hotel (₹)</Label>
+                  <Input
+                    id="hotelCost"
+                    type="number"
+                    placeholder="0"
+                    value={hotelCost}
+                    onChange={(e) => setHotelCost(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="transportCost" className="text-xs font-semibold">Transport (₹)</Label>
+                  <Input
+                    id="transportCost"
+                    type="number"
+                    placeholder="0"
+                    value={transportCost}
+                    onChange={(e) => setTransportCost(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="attractionCost" className="text-xs font-semibold">Attraction (₹)</Label>
+                  <Input
+                    id="attractionCost"
+                    type="number"
+                    placeholder="0"
+                    value={attractionCost}
+                    onChange={(e) => setAttractionCost(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Total estimation */}
+              <div className="bg-muted/50 rounded-xl p-3 space-y-2 border border-border/50 text-sm">
+                <div className="flex justify-between font-semibold">
+                  <span>Estimated Total for {cityName}:</span>
+                  <span className="text-primary">₹{placeTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                </div>
+                {budgetLimit > 0 && (
+                  <div className="space-y-1 pt-1.5 border-t border-border/60 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Current Remaining Budget:</span>
+                      <span>₹{remainingBudget.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between font-medium">
+                      <span className="text-muted-foreground">Remaining After Add:</span>
+                      <span className={newRemainingBudget < 0 ? "text-red-500" : "text-green-600"}>
+                        ₹{newRemainingBudget.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    {newRemainingBudget < 0 && (
+                      <p className="text-[10px] text-red-500 font-semibold mt-1">
+                        ⚠️ Adding this will put you over budget by ₹{Math.abs(newRemainingBudget).toLocaleString('en-IN')}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2.5 pt-1">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="button" className="flex-1 font-semibold" onClick={handleAdd}>
+                  Add Stop &amp; Deduct
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function NewTripForm() {
+  const today = new Date().toLocaleDateString('en-CA');
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [locationInput, setLocationInput] = useState("");
+  const [suggestionsList, setSuggestionsList] = useState(PREDEFINED_SUGGESTIONS);
+
+  useEffect(() => {
+    const trimmed = locationInput.trim();
+    if (!trimmed) {
+      setSuggestionsList(PREDEFINED_SUGGESTIONS);
+      return;
+    }
+
+    const handler = setTimeout(() => {
+      fetch(`/api/trips/suggestions?city=${encodeURIComponent(trimmed)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.suggestions && data.suggestions.length > 0) {
+            setSuggestionsList(data.suggestions);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to fetch suggestions:", err);
+        });
+    }, 600);
+
+    return () => clearTimeout(handler);
+  }, [locationInput]);
   const [suggestionInput, setSuggestionInput] = useState("");
   const [stops, setStops] = useState<Stop[]>([]);
   const [showStopForm, setShowStopForm] = useState(false);
@@ -81,7 +387,58 @@ export function NewTripForm() {
   };
 
   const removeStop = (id: string) => {
+    const stopToRemove = stops.find((s) => s.id === id);
     setStops((prev) => prev.filter((s) => s.id !== id));
+    if (stopToRemove) {
+      const suggestionId = `${stopToRemove.cityName}, ${stopToRemove.country}`;
+      setSuggestions((prev) => prev.filter((sId) => sId !== suggestionId));
+    }
+  };
+
+  const addStopWithActivity = (
+    suggestionId: string,
+    stopData: {
+      cityName: string;
+      country: string;
+      arrivalDate: string;
+      departureDate: string;
+      hotelName?: string;
+      hotelCost?: number;
+      transportCost?: number;
+      activityName: string;
+      activityDesc: string;
+      activityCost?: number;
+    }
+  ) => {
+    const newStopId = Date.now().toString();
+    const newStop: Stop = {
+      id: newStopId,
+      cityName: stopData.cityName,
+      country: stopData.country,
+      arrivalDate: stopData.arrivalDate,
+      departureDate: stopData.departureDate,
+      hotelName: stopData.hotelName,
+      hotelCost: stopData.hotelCost,
+      transportCost: stopData.transportCost,
+      activities: stopData.activityCost || stopData.activityName ? [
+        {
+          id: (Date.now() + 1).toString(),
+          name: stopData.activityName,
+          description: stopData.activityDesc,
+          cost: stopData.activityCost,
+        }
+      ] : []
+    };
+    setStops((prev) => [...prev, newStop]);
+
+    if (!suggestions.includes(suggestionId)) {
+      setSuggestions((prev) => [...prev, suggestionId]);
+    }
+  };
+
+  const removeStopByCity = (cityName: string, suggestionId: string) => {
+    setStops((prev) => prev.filter((s) => s.cityName.toLowerCase() !== cityName.toLowerCase()));
+    setSuggestions((prev) => prev.filter((sId) => sId !== suggestionId));
   };
 
   const addActivityToStop = (stopId: string, activity: Omit<Activity, 'id'>) => {
@@ -161,11 +518,11 @@ export function NewTripForm() {
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="startDate">Start Date</Label>
-          <Input id="startDate" name="startDate" type="date" required />
+          <Input id="startDate" name="startDate" type="date" min={today} required />
         </div>
         <div className="space-y-2">
           <Label htmlFor="endDate">End Date</Label>
-          <Input id="endDate" name="endDate" type="date" required />
+          <Input id="endDate" name="endDate" type="date" min={today} required />
         </div>
       </div>
 
@@ -203,7 +560,13 @@ export function NewTripForm() {
       {/* Location */}
       <div className="space-y-2">
         <Label htmlFor="location">Location / Starting City</Label>
-        <Input id="location" name="location" placeholder="e.g. Athens, Greece" />
+        <Input 
+          id="location" 
+          name="location" 
+          placeholder="e.g. Athens, Greece" 
+          value={locationInput}
+          onChange={(e) => setLocationInput(e.target.value)}
+        />
       </div>
 
       {/* Cover Photo */}
@@ -252,11 +615,11 @@ export function NewTripForm() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="newStopArrival">Arrival Date</Label>
-                  <Input id="newStopArrival" type="date" />
+                  <Input id="newStopArrival" type="date" min={today} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="newStopDeparture">Departure Date</Label>
-                  <Input id="newStopDeparture" type="date" />
+                  <Input id="newStopDeparture" type="date" min={today} />
                 </div>
               </div>
               <div className="space-y-2">
@@ -353,10 +716,10 @@ export function NewTripForm() {
                   {(stop.hotelCost || stop.transportCost) && (
                     <div className="flex gap-4 text-sm">
                       {stop.hotelCost && (
-                        <span className="text-muted-foreground">Hotel: ${stop.hotelCost}</span>
+                        <span className="text-muted-foreground">Hotel: ₹{stop.hotelCost}</span>
                       )}
                       {stop.transportCost && (
-                        <span className="text-muted-foreground">Transport: ${stop.transportCost}</span>
+                        <span className="text-muted-foreground">Transport: ₹{stop.transportCost}</span>
                       )}
                     </div>
                   )}
@@ -476,18 +839,18 @@ export function NewTripForm() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Total Budget</p>
-                    <p className="text-2xl font-bold">${budgetLimit.toFixed(2)}</p>
+                    <p className="text-2xl font-bold">₹{budgetLimit.toFixed(2)}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-muted-foreground">Total Expenses</p>
                     <p className={`text-2xl font-bold ${budgetPercentage > 100 ? 'text-red-500' : ''}`}>
-                      ${totalExpenses.toFixed(2)}
+                      ₹{totalExpenses.toFixed(2)}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-muted-foreground">Remaining</p>
                     <p className={`text-2xl font-bold ${remainingBudget < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                      ${remainingBudget.toFixed(2)}
+                      ₹{remainingBudget.toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -514,7 +877,7 @@ export function NewTripForm() {
 
                 {budgetPercentage > 100 && (
                   <p className="text-sm text-red-500 font-medium">
-                    ⚠️ You are over budget by ${(totalExpenses - budgetLimit).toFixed(2)}
+                    ⚠️ You are over budget by ₹{(totalExpenses - budgetLimit).toFixed(2)}
                   </p>
                 )}
               </div>
@@ -543,24 +906,24 @@ export function NewTripForm() {
                       {stop.hotelCost && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Hotel</span>
-                          <span>${stop.hotelCost.toFixed(2)}</span>
+                          <span>₹{stop.hotelCost.toFixed(2)}</span>
                         </div>
                       )}
                       {stop.transportCost && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Transport</span>
-                          <span>${stop.transportCost.toFixed(2)}</span>
+                          <span>₹{stop.transportCost.toFixed(2)}</span>
                         </div>
                       )}
                       {stop.activities.map((activity) => activity.cost && (
                         <div key={activity.id} className="flex justify-between">
                           <span className="text-muted-foreground">{activity.name}</span>
-                          <span>${activity.cost.toFixed(2)}</span>
+                          <span>₹{activity.cost.toFixed(2)}</span>
                         </div>
                       ))}
                       <div className="flex justify-between font-semibold pt-1 border-t">
                         <span>Subtotal</span>
-                        <span>${stopTotal.toFixed(2)}</span>
+                        <span>₹{stopTotal.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -579,7 +942,7 @@ export function NewTripForm() {
                           <Badge variant="outline" className="ml-2 text-xs">{expense.category}</Badge>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span>${expense.amount.toFixed(2)}</span>
+                          <span>₹{expense.amount.toFixed(2)}</span>
                           <Button
                             type="button"
                             variant="ghost"
@@ -700,87 +1063,29 @@ export function NewTripForm() {
 
         {/* 3x2 Grid of Image Cards matching Screen 4 wireframe */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {PREDEFINED_SUGGESTIONS.map((s) => {
-            const isSelected = suggestions.includes(s.id);
+          {suggestionsList.map((s) => {
+            const isSelected = stops.some(stop => stop.cityName.toLowerCase() === s.title.toLowerCase());
             return (
-              <Dialog key={s.id}>
-                <Card
-                  onClick={() => toggleSuggestion(s.id)}
-                  className={`relative h-32 md:h-40 overflow-hidden cursor-pointer group transition-all duration-300 border-2 ${
-                    isSelected ? "border-primary ring-2 ring-primary/30" : "border-transparent hover:border-primary/50"
-                  }`}
-                >
-                  <img
-                    src={s.image}
-                    alt={s.title}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                  
-                  <div className="absolute inset-0 p-3 flex flex-col justify-between z-10 pointer-events-none">
-                    <div className="flex justify-end">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors pointer-events-auto ${
-                        isSelected ? "bg-primary text-primary-foreground" : "bg-black/40 text-white/70 backdrop-blur-sm group-hover:bg-black/60"
-                      }`}>
-                        {isSelected ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="text-white font-medium text-sm md:text-base leading-tight">
-                        {s.title}
-                      </h4>
-                      <p className="text-white/70 text-[10px] md:text-xs mt-0.5 line-clamp-1 mb-1.5">
-                        {s.desc}
-                      </p>
-                      <div className="pointer-events-auto">
-                        <DialogTrigger asChild>
-                          <Button variant="secondary" size="sm" className="h-6 text-[10px] px-2 bg-white/20 hover:bg-white/40 text-white border-none backdrop-blur-md" onClick={(e) => {
-                            e.stopPropagation();
-                          }}>
-                            Preview
-                          </Button>
-                        </DialogTrigger>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-
-                <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-border/70 z-[60]">
-                  <div className="relative h-48 sm:h-64 w-full">
-                    <img
-                      src={s.image}
-                      alt={s.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4 text-white">
-                      <DialogTitle className="text-2xl font-bold">{s.title}</DialogTitle>
-                    </div>
-                  </div>
-                  <div className="p-6 pt-2 space-y-4">
-                    <DialogDescription className="text-sm">
-                      {s.desc}. A fantastic destination to consider for your next itinerary!
-                    </DialogDescription>
-                    <div className="pt-2">
-                      <Button className="w-full" onClick={() => {
-                        if (!isSelected) toggleSuggestion(s.id);
-                        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-                      }}>
-                        {isSelected ? "Already Added" : "Add Idea to Trip"}
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <SuggestionCard
+                key={s.id}
+                s={s}
+                locationInput={locationInput}
+                today={today}
+                isSelected={isSelected}
+                onAddStop={addStopWithActivity}
+                onRemoveStop={removeStopByCity}
+                budgetLimit={budgetLimit}
+                remainingBudget={remainingBudget}
+              />
             );
           })}
         </div>
 
         {/* Existing / Custom suggestions */}
         <div className="space-y-3 rounded-xl border border-border bg-muted/20 p-4 mt-2">
-          {suggestions.filter(s => !PREDEFINED_SUGGESTIONS.find(ps => ps.id === s)).length > 0 && (
+          {suggestions.filter(s => !suggestionsList.find(ps => ps.id === s)).length > 0 && (
             <ul className="space-y-1.5 mb-3">
-              {suggestions.filter(s => !PREDEFINED_SUGGESTIONS.find(ps => ps.id === s)).map((s, idx) => (
+              {suggestions.filter(s => !suggestionsList.find(ps => ps.id === s)).map((s, idx) => (
                 <li
                   key={idx}
                   className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm"

@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-
 import { UserMenu } from "@/components/auth/user-menu";
-import { Button } from "@/components/ui/button";
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-40 bg-transparent w-full">
+    <header className="sticky top-0 z-40 bg-transparent w-full lg:hidden">
       <div className="w-full">
         <div className="border border-border/60 bg-[#F7F2EA]/90 px-6 py-4 shadow-lg backdrop-blur-xl">
           <div className="flex items-center justify-between">
@@ -24,16 +22,12 @@ export function Navbar() {
                 </span>
               </div>
             </Link>
+            
             <div className="flex items-center gap-3">
-              <Button
-                asChild
-                className="hidden sm:inline-flex rounded-full bg-black px-5 text-sm font-semibold !text-white hover:bg-black/90"
-              >
-                <Link href="/trips/new" className="!text-white">
-                  New trip
-                </Link>
-              </Button>
-              <UserMenu />
+              {/* Mobile Profile & Sign-out Dropdown */}
+              <div className="lg:hidden">
+                <UserMenu />
+              </div>
             </div>
           </div>
         </div>

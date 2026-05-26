@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Traveloop icon">
+  <rect width="512" height="512" rx="120" fill="#0D7A73" />
+  <path
+    d="M256 96c-74.7 0-135.5 60.8-135.5 135.5 0 94.3 135.5 252.5 135.5 252.5s135.5-158.2 135.5-252.5C391.5 156.8 330.7 96 256 96z"
+    fill="#F9F6F1"
+  />
+  <circle cx="256" cy="232" r="52" fill="#0D7A73" />
+  <path
+    d="M256 140c51.5 0 93.5 42 93.5 93.5"
+    stroke="#F1EADF"
+    stroke-width="20"
+    stroke-linecap="round"
+    opacity="0.9"
+  />
+  <circle cx="360" cy="232" r="14" fill="#F1EADF" />
+</svg>

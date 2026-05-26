@@ -38,6 +38,9 @@ type CityResult = {
   region: string;
   costIndex: number;
   popularity: number;
+  description?: string;
+  thumbnail?: string | null;
+  placesToVisit?: string[];
 };
 
 type TripOption = {
@@ -52,6 +55,7 @@ export function CitySearch({
   trips: TripOption[];
   savedCityIds: string[];
 }) {
+  const today = new Date().toLocaleDateString('en-CA');
   const router = useRouter();
   const [selectedTripId, setSelectedTripId] = useState(trips[0]?.id ?? "");
   const [query, setQuery] = useState("");
@@ -168,7 +172,7 @@ export function CitySearch({
               <Card className="border-border/70 overflow-hidden flex flex-col hover:shadow-md transition-shadow h-full">
                 <div className="relative h-40 w-full bg-muted shrink-0">
                   <img
-                    src={getPlaceImage(city.cityName)}
+                    src={city.thumbnail || getPlaceImage(city.cityName)}
                     alt={city.cityName}
                     className="w-full h-full object-cover object-center"
                   />
@@ -187,8 +191,16 @@ export function CitySearch({
                     <Badge>Cost Index: {city.costIndex}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                    Explore the beautiful region of {city.region} and discover why it's a famous destination.
+                    {city.description || `Explore the beautiful region of ${city.region} and discover why it's a famous destination.`}
                   </p>
+                  {city.placesToVisit && city.placesToVisit.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-border/40 space-y-1">
+                      <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">Places to Visit</span>
+                      <p className="text-[11px] font-semibold text-foreground/90 line-clamp-1">
+                        {city.placesToVisit.join(" • ")}
+                      </p>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent className="flex flex-col gap-2 pt-0 mt-auto">
                   <div className="flex gap-2 w-full">
@@ -212,7 +224,7 @@ export function CitySearch({
               <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-border/70 z-[60]">
                 <div className="relative h-48 sm:h-64 w-full">
                   <img
-                    src={getPlaceImage(city.cityName)}
+                    src={city.thumbnail || getPlaceImage(city.cityName)}
                     alt={city.cityName}
                     className="w-full h-full object-cover object-center"
                   />
@@ -232,8 +244,20 @@ export function CitySearch({
                     <Badge>Popularity: {city.popularity}</Badge>
                   </div>
                   <DialogDescription className="text-sm">
-                    Explore the beautiful region of {city.region} and discover why it's a famous destination. A perfect addition to your upcoming itinerary!
+                    {city.description || `Explore the beautiful region of ${city.region} and discover why it's a famous destination. A perfect addition to your upcoming itinerary!`}
                   </DialogDescription>
+                  {city.placesToVisit && city.placesToVisit.length > 0 && (
+                    <div className="bg-muted/50 rounded-2xl p-4 space-y-2">
+                      <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Popular Places to Visit</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {city.placesToVisit.map((place) => (
+                          <Badge key={place} variant="secondary" className="bg-background border-border/50 text-foreground font-medium py-1 px-2.5 rounded-lg text-[11px]">
+                            {place}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-3 pt-2">
                     <div className="col-span-2">
                       <Label className="text-xs">Select Trip</Label>
@@ -255,6 +279,7 @@ export function CitySearch({
                       <Input
                         id={`arr-${city.id}`}
                         type="date"
+                        min={today}
                         className="h-8 text-xs"
                         value={arrivalDate}
                         onChange={(event) => setArrivalDate(event.target.value)}
@@ -265,6 +290,7 @@ export function CitySearch({
                       <Input
                         id={`dep-${city.id}`}
                         type="date"
+                        min={today}
                         className="h-8 text-xs"
                         value={departureDate}
                         onChange={(event) => setDepartureDate(event.target.value)}

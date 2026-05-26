@@ -57,7 +57,7 @@ export function BudgetCharts({
                   <Cell key={entry.name} fill={colors[index % colors.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => `$${value}`} />
+              <Tooltip formatter={(value) => `₹${value}`} />
             </PieChart>
           </ResponsiveContainer>
         </CardContent>
@@ -71,7 +71,7 @@ export function BudgetCharts({
             <BarChart data={pieData} barSize={32}>
               <XAxis dataKey="name" tickLine={false} axisLine={false} />
               <YAxis tickLine={false} axisLine={false} />
-              <Tooltip formatter={(value) => `$${value}`} />
+              <Tooltip formatter={(value) => `₹${value}`} />
               <Bar dataKey="value" radius={[12, 12, 0, 0]}>
                 {pieData.map((entry, index) => (
                   <Cell key={entry.name} fill={colors[index % colors.length]} />

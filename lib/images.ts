@@ -40,11 +40,7 @@ export const getPlaceImage = (name: string, type: 'city' | 'activity' = 'city') 
     }
   }
   
-  // Deterministic fallback based on string length and character codes
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % fallbacks.length;
-  return fallbacks[index];
+  // Dynamic LoremFlickr search for gorgeous live travel images!
+  const cleanTags = name.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).join(",");
+  return `https://loremflickr.com/1200/800/${cleanTags},travel/all`;
 };

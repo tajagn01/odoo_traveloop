@@ -19,6 +19,7 @@ interface CopyTripModalProps {
 }
 
 export function CopyTripModal({ isOpen, onClose, post }: CopyTripModalProps) {
+  const today = new Date().toLocaleDateString('en-CA');
   const [status, setStatus] = useState<"idle" | "selectDates" | "copying" | "success">("idle");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -131,6 +132,7 @@ export function CopyTripModal({ isOpen, onClose, post }: CopyTripModalProps) {
                     <Input
                       id="copy-start-date"
                       type="date"
+                      min={today}
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
                       className="mt-2"
@@ -144,6 +146,7 @@ export function CopyTripModal({ isOpen, onClose, post }: CopyTripModalProps) {
                     <Input
                       id="copy-end-date"
                       type="date"
+                      min={today}
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
                       className="mt-2"

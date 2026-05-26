@@ -20,6 +20,7 @@ interface StopCardProps {
 }
 
 export function StopCard({ stop, index }: StopCardProps) {
+  const today = new Date().toLocaleDateString('en-CA');
   const [expanded, setExpanded] = useState(false);
   const { updateStop } = useBuilderStore();
   
@@ -101,6 +102,7 @@ export function StopCard({ stop, index }: StopCardProps) {
               <Label className="text-xs text-muted-foreground">Arrival</Label>
               <Input
                 type="date"
+                min={today}
                 className="h-8 text-sm mt-1"
                 value={stop.arrivalDate ? format(new Date(stop.arrivalDate), "yyyy-MM-dd") : ""}
                 onChange={(e) => handleUpdate("arrivalDate", e.target.value)}
@@ -110,6 +112,7 @@ export function StopCard({ stop, index }: StopCardProps) {
               <Label className="text-xs text-muted-foreground">Departure</Label>
               <Input
                 type="date"
+                min={today}
                 className="h-8 text-sm mt-1"
                 value={stop.departureDate ? format(new Date(stop.departureDate), "yyyy-MM-dd") : ""}
                 onChange={(e) => handleUpdate("departureDate", e.target.value)}
@@ -183,7 +186,7 @@ export function StopCard({ stop, index }: StopCardProps) {
               </h4>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs">Stay Cost ($)</Label>
+                  <Label className="text-xs">Stay Cost (₹)</Label>
                   <Input
                     type="number"
                     className="h-8 text-sm"
@@ -192,7 +195,7 @@ export function StopCard({ stop, index }: StopCardProps) {
                   />
                 </div>
                 <div>
-                  <Label className="text-xs">Local Transport ($)</Label>
+                  <Label className="text-xs">Local Transport (₹)</Label>
                   <Input
                     type="number"
                     className="h-8 text-sm"

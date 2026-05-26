@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, FolderOpen, LayoutDashboard, Settings, Map, Activity, Globe2 } from "lucide-react";
+import { Compass, FolderOpen, LayoutDashboard, User, Map, Activity, Globe2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -13,7 +13,7 @@ const items = [
   { href: "/cities", label: "Cities", icon: Map },
   { href: "/activities", label: "Activities", icon: Activity },
   { href: "/community", label: "Community", icon: Globe2 },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/profile", label: "Profile", icon: User },
 ];
 
 export function MobileNav() {

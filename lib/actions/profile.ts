@@ -55,7 +55,6 @@ export async function updateProfileAction(formData: FormData) {
     },
   });
 
-  revalidatePath("/settings");
   revalidatePath("/profile");
 }
 

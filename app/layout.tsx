@@ -23,6 +23,11 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Traveloop",
   description: "Plan multi-city itineraries with budgets, packing lists, and shared views.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default async function RootLayout({

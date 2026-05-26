@@ -190,7 +190,7 @@ export default function Home() {
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl border border-[#1F1B16]/15 bg-[#FBF7F0] px-4 py-3">
                     <p className="text-xs uppercase tracking-wide text-[#6A5E4C]">Budget lane</p>
-                    <p className="mt-2 text-sm font-semibold text-[#1F1B16]">$3,070 / $3,200</p>
+                    <p className="mt-2 text-sm font-semibold text-[#1F1B16]">₹3,070 / ₹3,200</p>
                   </div>
                   <div className="rounded-2xl border border-[#1F1B16]/15 bg-[#FBF7F0] px-4 py-3">
                     <p className="text-xs uppercase tracking-wide text-[#6A5E4C]">Pack list</p>

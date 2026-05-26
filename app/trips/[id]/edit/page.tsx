@@ -17,6 +17,7 @@ export default async function EditTripPage({
 }) {
   const { id } = await params;
   const session = await requireAuth();
+  const today = new Date().toLocaleDateString('en-CA');
 
   const trip = await prisma.trip.findFirst({
     where: { id, userId: session.user.id },
@@ -72,6 +73,7 @@ export default async function EditTripPage({
                   id="startDate"
                   name="startDate"
                   type="date"
+                  min={today}
                   defaultValue={trip.startDate.toISOString().slice(0, 10)}
                   required
                 />
@@ -82,6 +84,7 @@ export default async function EditTripPage({
                   id="endDate"
                   name="endDate"
                   type="date"
+                  min={today}
                   defaultValue={trip.endDate.toISOString().slice(0, 10)}
                   required
                 />

@@ -75,6 +75,7 @@ function totalCost(activities: SectionActivity[]) {
 /* ------------------------------------------------------------------ */
 
 function AddSectionRow({ tripId }: { tripId: string }) {
+  const today = new Date().toLocaleDateString('en-CA');
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -137,11 +138,11 @@ function AddSectionRow({ tripId }: { tripId: string }) {
         </div>
         <div className="space-y-1">
           <Label htmlFor="new-arrival">Start date</Label>
-          <Input id="new-arrival" type="date" {...field("arrivalDate")} />
+          <Input id="new-arrival" type="date" min={today} {...field("arrivalDate")} />
         </div>
         <div className="space-y-1">
           <Label htmlFor="new-departure">End date</Label>
-          <Input id="new-departure" type="date" {...field("departureDate")} />
+          <Input id="new-departure" type="date" min={today} {...field("departureDate")} />
         </div>
       </div>
       <div className="mt-4 flex gap-2">
@@ -173,6 +174,7 @@ function SectionCard({
   isFirst: boolean;
   isLast: boolean;
 }) {
+  const today = new Date().toLocaleDateString('en-CA');
   const router = useRouter();
   const [expanded, setExpanded] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -311,11 +313,11 @@ function SectionCard({
           </div>
           <div className="space-y-1">
             <Label>Start date</Label>
-            <Input type="date" {...field("arrivalDate")} required />
+            <Input type="date" min={today} {...field("arrivalDate")} required />
           </div>
           <div className="space-y-1">
             <Label>End date</Label>
-            <Input type="date" {...field("departureDate")} required />
+            <Input type="date" min={today} {...field("departureDate")} required />
           </div>
           <div className="sm:col-span-2 flex gap-2">
             <Button type="submit" size="sm">Save</Button>

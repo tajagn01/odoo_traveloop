@@ -38,6 +38,7 @@ type BuilderStopsProps = {
 };
 
 export function BuilderStops({ stops }: BuilderStopsProps) {
+  const today = new Date().toLocaleDateString('en-CA');
   const router = useRouter();
   const [editing, setEditing] = useState<string | null>(null);
 
@@ -152,11 +153,11 @@ export function BuilderStops({ stops }: BuilderStopsProps) {
                 </div>
                 <div>
                   <Label>Arrival</Label>
-                  <Input name="arrivalDate" type="date" required defaultValue={stop.arrivalDate.slice(0, 10)} />
+                  <Input name="arrivalDate" type="date" min={today} required defaultValue={stop.arrivalDate.slice(0, 10)} />
                 </div>
                 <div>
                   <Label>Departure</Label>
-                  <Input name="departureDate" type="date" required defaultValue={stop.departureDate.slice(0, 10)} />
+                  <Input name="departureDate" type="date" min={today} required defaultValue={stop.departureDate.slice(0, 10)} />
                 </div>
                 <div className="md:col-span-2 flex gap-2">
                   <Button type="submit">Save</Button>

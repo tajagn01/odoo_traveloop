@@ -8,6 +8,7 @@ const signupSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(8),
+  image: z.string().optional(),
 });
 
 export async function POST(request: Request) {
@@ -36,6 +37,8 @@ export async function POST(request: Request) {
         email,
         password: hashedPassword,
         emailVerified: new Date(),
+        image: payload.data.image ?? undefined,
+        profilePhoto: payload.data.image ?? undefined,
       },
     });
 

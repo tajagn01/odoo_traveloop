@@ -188,7 +188,7 @@ export default async function BudgetPage({
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="expAmount">Amount ($)</Label>
+                <Label htmlFor="expAmount">Amount (₹)</Label>
                 <Input id="expAmount" name="amount" type="number" step="0.01" min="0.01" placeholder="0.00" required />
               </div>
               <div className="space-y-1.5">

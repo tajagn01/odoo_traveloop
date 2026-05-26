@@ -18,6 +18,30 @@ const stopSchema = z
 
 async function resolveCity(input: z.infer<typeof stopSchema>) {
   if (input.cityId) {
+    // Intercept dynamic temporary IDs generated during live Wikipedia internet searches
+    if (input.cityId.startsWith("temp__")) {
+      const parts = input.cityId.split("__");
+      const cityName = decodeURIComponent(parts[1]);
+      const countryName = decodeURIComponent(parts[2] || "Global");
+
+      return prisma.city.upsert({
+        where: {
+          name_country: {
+            name: cityName,
+            country: countryName,
+          },
+        },
+        update: {},
+        create: {
+          name: cityName,
+          country: countryName,
+          region: "Custom",
+          popularityScore: 50,
+          costIndex: 50,
+        },
+      });
+    }
+
     const city = await prisma.city.findUnique({ where: { id: input.cityId } });
     if (!city) {
       throw new Error("City not found.");

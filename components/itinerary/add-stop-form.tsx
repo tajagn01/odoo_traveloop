@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function AddStopForm({ tripId }: { tripId: string }) {
+  const today = new Date().toLocaleDateString('en-CA');
   const router = useRouter();
   const [cityName, setCityName] = useState("");
   const [country, setCountry] = useState("");
@@ -70,6 +71,7 @@ export function AddStopForm({ tripId }: { tripId: string }) {
           <Input
             id="arrival"
             type="date"
+            min={today}
             value={arrivalDate}
             onChange={(event) => setArrivalDate(event.target.value)}
           />
@@ -79,6 +81,7 @@ export function AddStopForm({ tripId }: { tripId: string }) {
           <Input
             id="departure"
             type="date"
+            min={today}
             value={departureDate}
             onChange={(event) => setDepartureDate(event.target.value)}
           />
