@@ -221,20 +221,56 @@ export async function copyTrip(postId: string) {
   return newTrip;
 }
 
-export async function saveCommunityTrip(post: {
-  title: string;
-  coverImage: string | null;
-  author: { name: string; image: string | null };
-  trip: { budgetLimit: number | null };
-  durationDays: number;
-  destinations: string[];
-}) {
+export async function saveCommunityTrip(
+  post: {
+    title: string;
+    coverImage: string | null;
+    author: { name: string; image: string | null };
+    trip: { 
+      id: string;
+      budgetLimit: number | null;
+      startDate?: Date;
+      endDate?: Date;
+    };
+    durationDays: number;
+    destinations: string[];
+  },
+  dates?: { startDate?: Date; endDate?: Date }
+) {
   const session = await requireAuth();
 
-  const startDate = new Date();
-  startDate.setHours(0, 0, 0, 0);
-  const endDate = new Date(startDate);
-  endDate.setDate(startDate.getDate() + Math.max(post.durationDays - 1, 0));
+  // Use provided dates or calculate defaults
+  const newStartDate = dates?.startDate ? new Date(dates.startDate) : new Date();
+  newStartDate.setHours(0, 0, 0, 0);
+  
+  const newEndDate = dates?.endDate ? new Date(dates.endDate) : new Date(newStartDate);
+  if (!dates?.endDate) {
+    newEndDate.setDate(newStartDate.getDate() + Math.max(post.durationDays - 1, 0));
+  } else {
+    newEndDate.setHours(0, 0, 0, 0);
+  }
+
+  // Get the original trip with stops to calculate date adjustments
+  const originalTrip = await prisma.trip.findUnique({
+    where: { id: post.trip.id },
+    include: {
+      stops: {
+        orderBy: { stopOrder: "asc" },
+        include: { activities: true },
+      },
+    },
+  });
+
+  if (!originalTrip) {
+    throw new Error("Original trip not found");
+  }
+
+  // Calculate the date difference to adjust stops
+  const originalStartDate = new Date(originalTrip.startDate);
+  originalStartDate.setHours(0, 0, 0, 0);
+  const dateDifference = Math.floor(
+    (newStartDate.getTime() - originalStartDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
 
   const trip = await prisma.$transaction(async (tx) => {
     const newTrip = await tx.trip.create({
@@ -242,14 +278,47 @@ export async function saveCommunityTrip(post: {
         userId: session.user.id,
         tripName: post.title,
         description: `Saved from Community: ${post.author.name}`,
-        startDate,
-        endDate,
+        startDate: newStartDate,
+        endDate: newEndDate,
         coverPhoto: post.coverImage,
         budgetLimit: post.trip.budgetLimit,
         isPublic: false,
         shareToken: crypto.randomUUID(),
       },
     });
+
+    // Copy stops with adjusted dates
+    if (originalTrip.stops && originalTrip.stops.length > 0) {
+      for (const stop of originalTrip.stops) {
+        const adjustedArrivalDate = new Date(stop.arrivalDate);
+        adjustedArrivalDate.setDate(adjustedArrivalDate.getDate() + dateDifference);
+
+        const adjustedDepartureDate = new Date(stop.departureDate);
+        adjustedDepartureDate.setDate(adjustedDepartureDate.getDate() + dateDifference);
+
+        await tx.stop.create({
+          data: {
+            tripId: newTrip.id,
+            cityName: stop.cityName,
+            country: stop.country,
+            stopOrder: stop.stopOrder,
+            arrivalDate: adjustedArrivalDate,
+            departureDate: adjustedDepartureDate,
+            hotelName: stop.hotelName,
+            hotelCost: stop.hotelCost,
+            transportCost: stop.transportCost,
+            activities: {
+              create: stop.activities.map((activity) => ({
+                name: activity.name,
+                description: activity.description,
+                time: activity.time,
+                cost: activity.cost,
+              })),
+            },
+          },
+        });
+      }
+    }
 
     const communityPost = await tx.communityPost.create({
       data: {
