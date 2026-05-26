@@ -8,7 +8,7 @@ type BudgetHighlight = {
   totalCost: number;
   budgetLimit: number | null;
 };
-//hello this is the code
+//hellow
 
 export function BudgetHighlights({ budgets }: { budgets: BudgetHighlight[] }) {
   return (
