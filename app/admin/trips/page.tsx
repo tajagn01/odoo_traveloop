@@ -8,6 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
 import { summarizeExpenses } from "@/lib/expenses";
 
+type TopCityRow = {
+  cityName: string;
+  _count: {
+    cityName: number;
+  };
+};
+
 const statusConfig = {
   upcoming: { label: "Upcoming", className: "bg-blue-100 text-blue-700 border-blue-200" },
   ongoing: { label: "Ongoing", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
@@ -25,7 +32,7 @@ export default async function AdminTripsPage() {
     );
   }
 
-  const [topCities, tripStats, recentTrips, upcomingCount, ongoingCount, completedCount] = await Promise.all([
+  const [rawTopCities, tripStats, recentTrips, upcomingCount, ongoingCount, completedCount] = await Promise.all([
     prisma.stop.groupBy({
       by: ["cityName"],
       _count: { cityName: true },
@@ -48,6 +55,8 @@ export default async function AdminTripsPage() {
     prisma.trip.count({ where: { status: "ongoing" } }),
     prisma.trip.count({ where: { status: "completed" } }),
   ]);
+
+  const topCities = rawTopCities as TopCityRow[];
 
   const tripStatus = [
     { name: "Upcoming", value: upcomingCount },
