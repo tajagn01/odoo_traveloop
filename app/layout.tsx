@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { getServerSession } from "next-auth";
 import { Manrope, Playfair_Display } from "next/font/google";
 
 import { AuthSessionProvider } from "@/components/auth/session-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { authOptions } from "@/lib/auth";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -23,18 +25,20 @@ export const metadata: Metadata = {
   description: "Plan multi-city itineraries with budgets, packing lists, and shared views.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const session = await getServerSession(authOptions);
+
   return (
     <html
       lang="en"
       className={`${manrope.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-background text-foreground overflow-x-hidden" suppressHydrationWarning>
-        <AuthSessionProvider>
+        <AuthSessionProvider session={session}>
           {children}
           <Toaster />
         </AuthSessionProvider>
