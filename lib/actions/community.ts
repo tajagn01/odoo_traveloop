@@ -299,22 +299,30 @@ export async function saveCommunityTrip(
         await tx.stop.create({
           data: {
             tripId: newTrip.id,
+            cityId: stop.cityId,
             cityName: stop.cityName,
             country: stop.country,
             stopOrder: stop.stopOrder,
             arrivalDate: adjustedArrivalDate,
             departureDate: adjustedDepartureDate,
             hotelName: stop.hotelName,
-            hotelCost: stop.hotelCost,
+            stayCost: stop.stayCost,
             transportCost: stop.transportCost,
-            activities: {
+            activities: stop.activities.length > 0 ? {
               create: stop.activities.map((activity) => ({
-                name: activity.name,
+                cityId: activity.cityId,
+                activityName: activity.activityName,
                 description: activity.description,
-                time: activity.time,
+                activityType: activity.activityType,
+                duration: activity.duration,
                 cost: activity.cost,
+                imageUrl: activity.imageUrl,
+                rating: activity.rating,
+                bestTime: activity.bestTime,
+                scheduledDay: activity.scheduledDay,
+                scheduledTime: activity.scheduledTime,
               })),
-            },
+            } : undefined,
           },
         });
       }
