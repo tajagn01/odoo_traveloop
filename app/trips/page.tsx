@@ -26,13 +26,16 @@ export default async function TripsPage() {
     orderBy: { startDate: "asc" },
   });
 
-  const savedTrips = trips.filter((trip) => Boolean(trip.tripCopiesAsNew));
-  const regularTrips = trips.filter((trip) => !trip.tripCopiesAsNew);
+  const now = new Date();
 
-  // Filter by the actual status field from database
-  const ongoing = regularTrips.filter((t) => t.status === "ongoing");
-  const upcoming = regularTrips.filter((t) => t.status === "upcoming");
-  const completed = regularTrips.filter((t) => t.status === "completed");
+  const savedTrips = trips.filter((trip) => (trip.tripCopiesAsNew as any)?.length > 0);
+  const regularTrips = trips.filter((trip) => !(trip.tripCopiesAsNew as any)?.length);
+
+  const ongoing = regularTrips.filter(
+    (t) => t.startDate <= now && t.endDate >= now
+  );
+  const upcoming = regularTrips.filter((t) => t.startDate > now);
+  const completed = regularTrips.filter((t) => t.endDate < now);
 
   const hasAny = trips.length > 0;
 

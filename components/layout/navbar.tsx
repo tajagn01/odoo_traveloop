@@ -7,19 +7,35 @@ import { Button } from "@/components/ui/button";
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/40">
-      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-6 md:px-12 py-5">
-        <Link href="/dashboard" className="flex items-center gap-3 group">
-          <span className="text-xl font-bold tracking-tight text-foreground font-display transition-colors group-hover:text-[#0D7A73]">Traveloop</span>
-          <span className="rounded-lg bg-[#E5D9C4] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#666666]">
-            Planner
-          </span>
-        </Link>
-        <div className="flex items-center gap-4">
-          <Button asChild variant="ghost" className="hidden sm:inline-flex font-semibold text-sm hover:bg-[#0D7A73]/10 hover:text-[#0D7A73]">
-            <Link href="/trips/new">Plan New Trip</Link>
-          </Button>
-          <UserMenu />
+    <header className="sticky top-0 z-40 bg-transparent w-full">
+      <div className="w-full">
+        <div className="border border-border/60 bg-[#F7F2EA]/90 px-6 py-4 shadow-lg backdrop-blur-xl">
+          <div className="flex items-center justify-between">
+            <Link href="/dashboard" className="group inline-flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-[#1F1B16] text-xs font-bold uppercase tracking-[0.2em] text-[#F7F2EA]">
+                TL
+              </span>
+              <div className="leading-tight">
+                <span className="block text-lg font-semibold tracking-tight text-[#1F1B16] font-display">
+                  Traveloop
+                </span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#6A5E4C]">
+                  Journey Studio
+                </span>
+              </div>
+            </Link>
+            <div className="flex items-center gap-3">
+              <Button
+                asChild
+                className="hidden sm:inline-flex rounded-full bg-black px-5 text-sm font-semibold !text-white hover:bg-black/90"
+              >
+                <Link href="/trips/new" className="!text-white">
+                  New trip
+                </Link>
+              </Button>
+              <UserMenu />
+            </div>
+          </div>
         </div>
       </div>
     </header>
