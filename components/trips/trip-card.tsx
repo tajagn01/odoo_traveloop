@@ -119,25 +119,20 @@ export function TripCard({ trip }: { trip: TripCardData }) {
           </p>
         )}
       </CardHeader>
-      <CardContent className="space-y-3 pt-0 mt-auto">
-        <div className="flex flex-wrap gap-2">
-          <Button asChild size="sm" className="flex-1">
-            <Link href={`/trips/${trip.id}`}>View</Link>
-          </Button>
-          <Button asChild size="sm" variant="outline" className="px-3">
-            <Link href={`/trips/${trip.id}/builder`}>
-              <Pencil className="h-4 w-4" />
-            </Link>
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onDelete}
-            className="px-3 text-red-500 hover:text-red-600 hover:bg-red-500/10"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
+      <CardContent className="flex flex-wrap gap-2 pt-0 mt-auto">
+        <Button asChild size="sm" className="flex-1">
+          <Link href={`/trips/${trip.id}`}>View</Link>
+        </Button>
+        <Button asChild size="sm" variant="outline" className="px-3">
+          <Link href={`/trips/${trip.id}/builder`}>
+            <Pencil className="h-4 w-4" />
+          </Link>
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onDelete} className="px-3 text-red-500 hover:text-red-600 hover:bg-red-500/10">
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </CardContent>
+      <CardContent className="space-y-3">
         <div className="border-t pt-3">
           <p className="text-xs font-semibold text-muted-foreground mb-2">Trip Status</p>
           <div className="flex flex-wrap gap-2">

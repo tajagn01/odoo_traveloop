@@ -1,10 +1,11 @@
+import { cache } from "react";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
 import { authOptions } from "./auth";
 import { prisma } from "./prisma";
 
-export async function requireAuth() {
+export const requireAuth = cache(async function requireAuth() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
@@ -21,7 +22,7 @@ export async function requireAuth() {
   }
 
   return session;
-}
+});
 
 export async function getOptionalSession() {
   return getServerSession(authOptions);
