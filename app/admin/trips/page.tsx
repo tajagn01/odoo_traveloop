@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
 import { summarizeExpenses } from "@/lib/expenses";
+import type { Prisma } from "@prisma/client";
 
 type TopCityRow = {
   cityName: string;
@@ -14,6 +15,14 @@ type TopCityRow = {
     cityName: number;
   };
 };
+
+type RecentTripRow = Prisma.TripGetPayload<{
+  include: {
+    user: { select: { name: true; email: true } };
+    _count: { select: { stops: true } };
+    expenses: true;
+  };
+}>;
 
 const statusConfig = {
   upcoming: { label: "Upcoming", className: "bg-blue-100 text-blue-700 border-blue-200" },
@@ -57,6 +66,7 @@ export default async function AdminTripsPage() {
   ]);
 
   const topCities = rawTopCities as TopCityRow[];
+  const recentTripsRows = recentTrips as RecentTripRow[];
 
   const tripStatus = [
     { name: "Upcoming", value: upcomingCount },
@@ -80,7 +90,7 @@ export default async function AdminTripsPage() {
             <CardTitle className="text-base font-semibold">Recent trips ({tripStats._count.id} total)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {recentTrips.map((trip) => {
+            {recentTripsRows.map((trip) => {
               const totalCost = summarizeExpenses(
                 trip.expenses.map((e) => ({ category: e.category, amount: Number(e.amount) }))
               ).totalCost;
