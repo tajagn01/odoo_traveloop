@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
 import { summarizeExpenses } from "@/lib/expenses";
-import type { Prisma } from "@prisma/client";
 
 type TopCityRow = {
   cityName: string;
@@ -15,14 +14,6 @@ type TopCityRow = {
     cityName: number;
   };
 };
-
-type RecentTripRow = Prisma.TripGetPayload<{
-  include: {
-    user: { select: { name: true; email: true } };
-    _count: { select: { stops: true } };
-    expenses: true;
-  };
-}>;
 
 const statusConfig = {
   upcoming: { label: "Upcoming", className: "bg-blue-100 text-blue-700 border-blue-200" },
@@ -41,6 +32,18 @@ export default async function AdminTripsPage() {
     );
   }
 
+  const recentTripsPromise = prisma.trip.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 10,
+    include: {
+      user: { select: { name: true, email: true } },
+      _count: { select: { stops: true } },
+      expenses: true,
+    },
+  });
+
+  type RecentTripRow = Awaited<typeof recentTripsPromise>[number];
+
   const [rawTopCities, tripStats, recentTrips, upcomingCount, ongoingCount, completedCount] = await Promise.all([
     prisma.stop.groupBy({
       by: ["cityName"],
@@ -51,15 +54,7 @@ export default async function AdminTripsPage() {
     prisma.trip.aggregate({
       _count: { id: true },
     }),
-    prisma.trip.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      include: {
-        user: { select: { name: true, email: true } },
-        _count: { select: { stops: true } },
-        expenses: true,
-      },
-    }),
+    recentTripsPromise,
     prisma.trip.count({ where: { status: "upcoming" } }),
     prisma.trip.count({ where: { status: "ongoing" } }),
     prisma.trip.count({ where: { status: "completed" } }),

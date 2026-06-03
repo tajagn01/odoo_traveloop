@@ -7,24 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { TripRowWithStatus } from "@/components/trips/trip-row-with-status";
 import { requireAuth } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
-
-type TripListRow = Prisma.TripGetPayload<{
-  include: {
-    stops: true;
-    tripCopiesAsNew: {
-      select: { id: true };
-    };
-  };
-}>;
 
 export default async function TripsPage() {
   const session = await requireAuth();
-  const trips: TripListRow[] = await prisma.trip.findMany({
+  const tripsPromise = prisma.trip.findMany({
     where: { userId: session.user.id },
     include: { stops: true, tripCopiesAsNew: { select: { id: true } } },
     orderBy: { startDate: "asc" },
   });
+
+  type TripListRow = Awaited<typeof tripsPromise>[number];
+
+  const trips: TripListRow[] = await tripsPromise;
 
   const now = new Date();
 
