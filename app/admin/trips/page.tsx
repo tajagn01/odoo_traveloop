@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
 import { summarizeExpenses } from "@/lib/expenses";
-import type { Expense } from "@prisma/client";
+import type { ExpenseCategory } from "@prisma/client";
 
 type TopCityRow = {
   cityName: string;
@@ -88,7 +88,7 @@ export default async function AdminTripsPage() {
           <CardContent className="space-y-2">
             {recentTripsRows.map((trip) => {
               const totalCost = summarizeExpenses(
-                trip.expenses.map((e: Expense) => ({ category: e.category, amount: Number(e.amount) }))
+                trip.expenses.map((e: { category: ExpenseCategory; amount: number }) => ({ category: e.category, amount: Number(e.amount) }))
               ).totalCost;
               const statusKey = (trip.status ?? "upcoming") as keyof typeof statusConfig;
               const statusInfo = statusConfig[statusKey] ?? statusConfig.upcoming;
